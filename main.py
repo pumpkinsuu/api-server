@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import face_recognition as fr
+from flask import json
 import numpy as np
 from flask_ngrok import run_with_ngrok
 import model
@@ -14,9 +15,17 @@ password = 'AdminPass123'
 db = model.DataBase(dbname, password)
 
 
-@app.route('/', methods=['GET'])
+@app.route('/', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def home():
-    return ''
+    data = {
+        'args': str(request.args),
+        'header': str(request.headers),
+        'form': str(request.form),
+        'files': str(request.files),
+        'json': str(request.json),
+        'values': str(request.values)
+    }
+    return jsonify(data)
 
 
 @app.route('/api/faces', methods=['GET'])
@@ -57,41 +66,16 @@ def insert_face():
     return jsonify({'error': 'Database error'}), 500
 
 
-@app.route('/api/faces', methods=['PUT'])
-def update_face():
-    if not request.form or 'file' not in request.files or 'face_id' not in request.form:
-        return jsonify({'error': 'Bad request'}), 400
-
-    face_id = request.form['id']
-    if not db.find(face_id):
-        return jsonify({'error': 'ID not exist'}), 400
-
-    file = request.files['file']
-    img = fr.load_image_file(file)
-    data = fr.face_encodings(img)
-    if len(data) == 0:
-        return jsonify({'error': 'Face not found'}), 400
-
-    face = {
-        'id': face_id,
-        'data': data
-    }
-    if db.update(face):
-        return jsonify(face), 200
-
-    return jsonify({'error': 'Database error'}), 500
-
-
 @app.route('/api/faces', methods=['DELETE'])
 def remove_face():
-    if not request.form or 'face_id' not in request.form:
+    if not request.form or 'id' not in request.form:
         return jsonify({'error': 'Bad request'}), 400
 
     face_id = request.form['id']
     if not db.find(face_id):
         return jsonify({'error': 'ID not exist'}), 400
 
-    if db.remove()(face_id):
+    if db.remove(face_id):
         return jsonify({'id': face_id}), 200
 
     return jsonify({'error': 'Database error'}), 500
@@ -118,6 +102,10 @@ def check(faces, img, tol):
 
 @app.route('/api/faces/check', methods=['POST'])
 def check_face():
+    faces = db.find_all()
+    if len(faces) == 0:
+        return jsonify({'error': 'No faces in database'}), 200
+
     if not request.form or 'file' not in request.files:
         return jsonify({'error': 'Bad request'}), 400
     if 'tol' not in request.form:
@@ -127,11 +115,7 @@ def check_face():
     file = request.files['file']
     img = fr.load_image_file(file)
 
-    faces = db.find_all()
-    if len(faces):
-        return check(faces, img, tol)
-
-    return jsonify({'error': 'Database error'}), 500
+    return check(faces, img, tol)
 
 
 @app.errorhandler(404)
