@@ -30,8 +30,8 @@ def home():
 
 @app.route('/api/faces', methods=['GET'])
 def get_faces():
-    faces = db.find_all()
-    return jsonify(faces)
+    ids, data = db.find_all()
+    return jsonify(zip(ids, data))
 
 
 @app.route('/api/faces/<int:face_id>', methods=['GET'])
@@ -49,15 +49,17 @@ def insert_face():
     if db.find(face_id):
         return jsonify({'error': 'ID exist'}), 400
 
-    file = request.files['file']
-    img = fr.load_image_file(file)
-    data = fr.face_encodings(img)
-    if len(data) == 0:
-        return jsonify({'error': 'Face not found'}), 400
+    data = []
+    for file in request.files.getlist('file'):
+        img = fr.load_image_file(file)
+        faces = fr.face_encodings(img)
+        if len(faces) == 0:
+            return jsonify({'error': 'Face not found'}), 400
+        data.append(faces[0])
 
     face = {
         'id': face_id,
-        'data': data[0].tolist()
+        'data': data
     }
     if db.insert(face):
         face.pop('_id', None)
@@ -81,29 +83,26 @@ def remove_face():
     return jsonify({'error': 'Database error'}), 500
 
 
-def check(faces, img, tol):
-    faces_id = [face['id'] for face in faces]
-    faces_data = [face['data'] for face in faces]
-
+def check(ids, data, img, tol):
     face_locations = fr.face_locations(img)
-    ids = []
+    ids = set()
     if len(face_locations):
         face_encodings = fr.face_encodings(img, face_locations)
 
         for face_encoding in face_encodings:
-            matches = fr.compare_faces(faces_data, face_encoding, tol)
-            face_distances = fr.face_distance(faces_data, face_encoding)
+            matches = fr.compare_faces(data, face_encoding, tol)
+            face_distances = fr.face_distance(data, face_encoding)
             best_match_index = np.argmin(face_distances)
             if matches[best_match_index]:
-                ids.append(faces_id[best_match_index])
+                ids.add(ids[best_match_index])
 
     return jsonify({'ids': ids}), 200
 
 
 @app.route('/api/faces/check', methods=['POST'])
 def check_face():
-    faces = db.find_all()
-    if len(faces) == 0:
+    ids, data = db.find_all()
+    if len(ids) == 0:
         return jsonify({'error': 'No faces in database'}), 200
 
     if not request.form or 'file' not in request.files:
@@ -115,7 +114,7 @@ def check_face():
     file = request.files['file']
     img = fr.load_image_file(file)
 
-    return check(faces, img, tol)
+    return check(ids, data, img, tol)
 
 
 @app.errorhandler(404)
