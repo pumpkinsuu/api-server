@@ -1,6 +1,5 @@
-import pymongo
 import numpy as np
-from typing import List
+import pymongo
 
 
 class DataBase:
@@ -15,9 +14,21 @@ class DataBase:
 
     def find_all(self):
         results = self.db.find().sort('id')
-        faces = [{'id': result['id'], 'data': np.array(result['data'])}
+        users = [{'id': result['id'], 'data': result['data']}
                  for result in results]
-        return faces
+
+        return users
+
+    def get_data(self):
+        results = self.db.find().sort('id')
+
+        users = np.array([])
+        for result in results:
+            for embed in result['data']:
+                value = {'id': result['id'], 'data': np.array(embed)}
+                np.append(users, value)
+
+        return users
 
     def find(self, face_id: int):
         result = self.db.find_one({'id': face_id})
@@ -28,25 +39,25 @@ class DataBase:
             }
         return {}
 
-    def insert(self, face: dict):
+    def insert(self, user: dict):
         try:
-            self.db.insert_one(face)
+            self.db.insert_one(user)
             return True
         except Exception as ex:
             print(f'Insert: {ex}')
             return False
 
-    def update(self, face: dict):
+    def update(self, user: dict):
         try:
-            self.db.update_one(face['id'], {"$set": face['data']})
+            self.db.update_one(user['id'], {"$set": user['data']})
             return True
         except Exception as ex:
             print(f'Insert: {ex}')
             return False
 
-    def remove(self, face_id: int):
+    def remove(self, user_id: int):
         try:
-            self.db.delete_one(face_id)
+            self.db.delete_one(user_id)
             return True
         except Exception as ex:
             print(f'Insert: {ex}')
