@@ -22,16 +22,17 @@ class DataBase:
     def get_data(self):
         results = self.db.find().sort('id')
 
-        users = np.array([])
+        ids = []
+        embeds = []
         for result in results:
             for embed in result['data']:
-                value = {'id': result['id'], 'data': np.array(embed)}
-                np.append(users, value)
+                ids.append(result['id'])
+                embeds.append(embed)
 
-        return users
+        return np.array(ids), np.array(embeds)
 
-    def find(self, face_id: int):
-        result = self.db.find_one({'id': face_id})
+    def find(self, user_id: int):
+        result = self.db.find_one({'id': user_id})
         if result:
             return {
                 'id': result['id'],
@@ -52,13 +53,13 @@ class DataBase:
             self.db.update_one(user['id'], {"$set": user['data']})
             return True
         except Exception as ex:
-            print(f'Insert: {ex}')
+            print(f'Update: {ex}')
             return False
 
     def remove(self, user_id: int):
         try:
-            self.db.delete_one(user_id)
+            self.db.delete_one({'id': user_id})
             return True
         except Exception as ex:
-            print(f'Insert: {ex}')
+            print(f'Delete: {ex}')
             return False
