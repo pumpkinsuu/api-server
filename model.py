@@ -3,8 +3,8 @@ import pymongo
 
 
 class DataBase:
-    def __init__(self, dbname, password, collection='main'):
-        client = pymongo.MongoClient(f"mongodb+srv://admin:{password}@cluster0.qe6sa.mongodb.net/"
+    def __init__(self, dbname, password, cluster, collection='main'):
+        client = pymongo.MongoClient(f"mongodb+srv://admin:{password}@{cluster}/"
                                      f"{dbname}?retryWrites=true&w=majority")
         db = client[dbname][collection]
         if db.count_documents({}) == 0:
