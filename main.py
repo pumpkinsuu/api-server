@@ -19,7 +19,7 @@ if not os.path.isdir('data'):
 
 app = Flask(__name__, static_url_path='/data', static_folder='data')
 app.config["DEBUG"] = True
-#run_with_ngrok(app)
+run_with_ngrok(app)
 
 
 def res_cors(key, val):
