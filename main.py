@@ -33,7 +33,7 @@ def res_cors(key, val):
     return res
 
 
-def check(data, embed, tol=0.4):
+def check(data, embed, tol=0.46):
     matches = fr.compare_faces(data, embed, tol)
     face_distances = fr.face_distance(data, embed)
     best_match_index = np.argmin(face_distances)
@@ -123,7 +123,7 @@ def remove_face():
     if not request.form or 'id' not in request.form:
         return res_cors('error', 'Bad request'), 400
 
-    user_id = request.form['id']
+    user_id = int(request.form['id'])
     if not db.find(user_id):
         return res_cors('error', 'ID not exist'), 400
 
@@ -148,10 +148,6 @@ def check_face():
     if 'file' not in request.files:
         return res_cors('error', 'Bad request'), 400
 
-    tol = 0.4
-    if 'tol' in request.form:
-        tol = float(request.form['tol'])
-
     file = request.files['file']
     img = fr.load_image_file(file)
     embeds = fr.face_encodings(img)
@@ -160,7 +156,7 @@ def check_face():
 
     ids = []
     for embed in embeds:
-        ids.append(check(data_embeds, embed, tol))
+        ids.append(check(data_embeds, embed))
     return res_cors('users', data_ids[ids].tolist()), 200
 
 
