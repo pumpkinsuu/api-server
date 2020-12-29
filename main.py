@@ -74,7 +74,7 @@ def insert_face():
 
     data_ids, data_embeds = db.get_data()
 
-    user_id = request.form['id']
+    user_id = int(request.form['id'])
 
     if len(data_ids) > 0:
         if user_id in data_ids:
