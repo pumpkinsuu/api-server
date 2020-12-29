@@ -14,7 +14,7 @@ class DataBase:
 
     def find_all(self):
         results = self.db.find().sort('id')
-        users = [{'id': result['id'], 'data': result['data']}
+        users = [{'id': result['id'], 'photo': result['photo']}
                  for result in results]
 
         return users
@@ -36,7 +36,7 @@ class DataBase:
         if result:
             return {
                 'id': result['id'],
-                'data': np.array(result['data'])
+                'photo': result['photo']
             }
         return {}
 
