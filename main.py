@@ -62,7 +62,7 @@ def get_faces():
     return res_cors('users', db.find_all()), 200
 
 
-@app.route('/api/users/<int:user_id>', methods=['GET'])
+@app.route('/api/user/<int:user_id>', methods=['GET'])
 def get_face(user_id):
     return res_cors('user', db.find(user_id)), 200
 
@@ -118,12 +118,9 @@ def insert_face():
     return res_cors('error', 'Database error'), 500
 
 
-@app.route('/api/users', methods=['DELETE'])
+@app.route('/api/user/<int:user_id>', methods=['DELETE'])
 def remove_face():
-    if not request.form or 'id' not in request.form:
-        return res_cors('error', 'Bad request'), 400
 
-    user_id = int(request.form['id'])
     if not db.find(user_id):
         return res_cors('error', 'ID not exist'), 400
 
@@ -138,7 +135,7 @@ def remove_face():
     return res_cors('error', 'Database error'), 500
 
 
-@app.route('/api/users/check', methods=['POST'])
+@app.route('/api/check', methods=['POST'])
 def check_face():
     data_ids, data_embeds = db.get_data()
 
