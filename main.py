@@ -119,7 +119,7 @@ def insert_face():
 
 
 @app.route('/api/user/<int:user_id>', methods=['DELETE'])
-def remove_face():
+def remove_face(user_id):
 
     if not db.find(user_id):
         return res_cors('error', 'ID not exist'), 400
