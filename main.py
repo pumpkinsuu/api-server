@@ -69,54 +69,58 @@ def get_face(user_id):
 
 @app.route('/api/users', methods=['POST'])
 def insert_face():
-    if not request.form or 'id' not in request.form or 'file' not in request.files:
-        return res_cors('error', 'Bad request'), 400
+    try:
+        if not request.form or 'id' not in request.form or 'file' not in request.files:
+            return res_cors('error', 'Bad request'), 400
 
-    data_ids, data_embeds = db.get_data()
+        data_ids, data_embeds = db.get_data()
 
-    user_id = int(request.form['id'])
-
-    if len(data_ids) > 0:
-        if user_id in data_ids:
-            return res_cors('error', 'ID exist'), 400
-
-    data = []
-    images = []
-    for file in request.files.getlist('file'):
-        img = fr.load_image_file(file)
-        embeds = fr.face_encodings(img)
-        if len(embeds) == 0:
-            return res_cors('error', 'Face not found'), 400
+        user_id = int(request.form['id'])
 
         if len(data_ids) > 0:
-            if check(data_embeds, embeds[0]) != '':
-                return res_cors('error', 'Face exist'), 400
+            if user_id in data_ids:
+                return res_cors('error', 'ID exist'), 400
 
-        if len(data) > 0 and check(data, embeds[0], 0.6) == '':
-            return res_cors('error', 'Different faces in file'), 400
+        data = []
+        images = []
+        for file in request.files.getlist('file'):
+            img = fr.load_image_file(file)
+            embeds = fr.face_encodings(img)
+            if len(embeds) == 0:
+                return res_cors('error', 'Face not found'), 400
 
-        data.append(embeds[0].tolist())
-        images.append(img)
+            if len(data_ids) > 0:
+                if check(data_embeds, embeds[0]) != '':
+                    return res_cors('error', 'Face exist'), 400
 
-    os.mkdir(f'data/{user_id}')
-    i = 1
-    urls = []
-    for img in images:
-        cv2.imwrite(f'data/{user_id}/{i}.jpg', cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-        urls.append(f'http://{request.host}/data/{user_id}/{i}.jpg')
-        i += 1
+            if len(data) > 0 and check(data, embeds[0], 0.6) == '':
+                return res_cors('error', 'Different faces in file'), 400
 
-    user = {
-        'id': user_id,
-        'data': data,
-        'photo': urls
-    }
-    if db.insert(user):
-        user.pop('_id', None)
-        return res_cors('user', user), 201
+            data.append(embeds[0].tolist())
+            images.append(img)
 
-    return res_cors('error', 'Database error'), 500
+        os.mkdir(f'data/{user_id}')
+        i = 1
+        urls = []
+        for img in images:
+            cv2.imwrite(f'data/{user_id}/{i}.jpg', cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
+            urls.append(f'http://{request.host}/data/{user_id}/{i}.jpg')
+            i += 1
 
+        user = {
+            'id': user_id,
+            'data': data,
+            'photo': urls
+        }
+        if db.insert(user):
+            user.pop('_id', None)
+            return res_cors('user', user), 201
+
+        return res_cors('error', 'Database error'), 500
+    except Exception as ex:
+        print(str(ex))
+        return res_cors('error', 'Some thing wrong'), 500
+    
 
 @app.route('/api/user/<int:user_id>', methods=['DELETE'])
 def remove_face(user_id):
