@@ -1,27 +1,30 @@
-import face_recognition as fr
-import numpy as np
+from face_model.model_dlib import Model
+from utilities import *
 from flask import Flask, request, jsonify
 from flask_ngrok import run_with_ngrok
 import os
 import shutil
-import cv2
+from database import DataBase
+import logging
 
-import model
-
-
+# Users database
 dbname = 'face_db'
 password = 'AdminPass123'
 cluster = 'cluster0.qe6sa.mongodb.net'
-db = model.DataBase(dbname, password, cluster)
+db = DataBase(dbname, password, cluster)
+
+# Model
+TOL = 0.46
+model = Model()
 
 if not os.path.isdir('data'):
     os.mkdir('data')
 
 app = Flask(__name__, static_url_path='/data', static_folder='data')
-app.config["DEBUG"] = True
-run_with_ngrok(app)
+app.config["DEBUG"] = False
 
 
+# Add CORS to response header
 def res_cors(key, val):
     status = 'success' if key != 'error' else 'failed'
     data = {
@@ -31,15 +34,6 @@ def res_cors(key, val):
     res = jsonify(data)
     res.headers.add("Access-Control-Allow-Origin", "*")
     return res
-
-
-def check(data, embed, tol=0.4):
-    matches = fr.compare_faces(data, embed, tol)
-    face_distances = fr.face_distance(data, embed)
-    best_match_index = np.argmin(face_distances)
-    if matches[best_match_index]:
-        return best_match_index
-    return ''
 
 
 @app.route('/', methods=['GET', 'POST', 'PUT', 'DELETE'])
@@ -58,110 +52,153 @@ def home():
 
 
 @app.route('/api/users', methods=['GET'])
-def get_faces():
-    return res_cors('users', db.find_all()), 200
+def get_users():
+    try:
+        limit = 0 if 'limit' not in request.args else request.args['limit']
+        offset = 0 if 'offset' not in request.args else request.args['offset']
+
+        users, sz = db.find_all(limit, offset)
+
+        if sz != 0:
+            return res_cors('users', users), 200
+
+        return res_cors('error', 'No user in database'), 200
+    except Exception as ex:
+        logging.exception("message")
+        print(ex)
+        return res_cors('error', 'Database error'), 500
 
 
-@app.route('/api/users/<int:user_id>', methods=['GET'])
-def get_face(user_id):
-    return res_cors('user', db.find(user_id)), 200
+@app.route('/api/user/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    try:
+        user = db.find(user_id)
+
+        if user:
+            return res_cors('user', user), 200
+
+        return res_cors('error', 'User id not exist'), 200
+    except Exception as ex:
+        logging.exception("message")
+        print(ex)
+        return res_cors('error', 'Database error'), 500
 
 
-@app.route('/api/users', methods=['POST'])
+@app.route('/api/user', methods=['POST'])
 def insert_face():
-    if not request.form or 'id' not in request.form or 'file' not in request.files:
-        return res_cors('error', 'Bad request'), 400
+    try:
+        if not request.form:
+            return res_cors('error', 'Bad request'), 400
 
-    data_ids, data_embeds = db.get_data()
+        if 'id' not in request.form:
+            return res_cors('error', 'No "id" in form'), 200
 
-    user_id = request.form['id']
+        if 'file' not in request.files:
+            return res_cors('error', 'No "file" in form'), 200
 
-    if len(data_ids) > 0:
-        if user_id in data_ids:
-            return res_cors('error', 'ID exist'), 400
+        user = {'id': int(request.form['id'])}
+        # Check user exist
+        if db.find(user['id']):
+            return res_cors('error', 'ID exist'), 200
 
-    data = []
-    images = []
-    for file in request.files.getlist('file'):
-        img = fr.load_image_file(file)
-        embeds = fr.face_encodings(img)
+        data = []
+        images = []
+        for file in request.files.getlist('file'):
+            img = load_img(file)
+            # Get face embed
+            embeds = model.get_embed(img)
+
+            if len(embeds) == 0:
+                return res_cors('error', 'Face not found'), 200
+
+            data.append(embeds[0])
+            images.append(img)
+
+        # Check photo same person
+        if any(distance(data[0], data[1:]) > TOL):
+            return res_cors('error', 'Different faces in file'), 200
+
+        # Get mean embeds
+        user['embed'] = mean(data)
+
+        db_id, db_embed, sz = db.get_users()
+
+        # Check embeds exist
+        if sz != 0:
+            idx, dist = find_min(user['embed'], db_embed)
+            if dist <= TOL:
+                return res_cors('error', 'Face exist'), 200
+
+        # Save photo folder
+        user_path = f'data/{user["id"]}'
+        user['photo'] = save_photo(user_path, images, request.host)
+
+        # Insert user to database
+        user['embed'] = user['embed'].tolist()
+        if db.insert(user):
+            user.pop('_id', None)
+            return res_cors('user', user), 201
+        else:
+            shutil.rmtree(user_path)
+
+        return res_cors('error', 'Database error'), 500
+    except Exception as ex:
+        logging.exception("message")
+        print(ex)
+        return res_cors('error', 'Something wrong'), 500
+
+
+@app.route('/api/user/<int:user_id>', methods=['DELETE'])
+def remove_face(user_id):
+    try:
+        user_id = user_id
+
+        if not db.find(user_id):
+            return res_cors('error', 'ID not exist'), 400
+
+        if db.remove(user_id):
+            try:
+                shutil.rmtree(f'data/{user_id}')
+            except Exception as ex:
+                print(ex)
+
+            return res_cors('id', user_id), 200
+
+        return res_cors('error', 'Database error'), 500
+    except Exception as ex:
+        logging.exception("message")
+        print(ex)
+        return res_cors('error', 'Something wrong'), 500
+
+
+@app.route('/api/check', methods=['POST'])
+def check_face():
+    try:
+        id_list, embed_list, sz = db.get_users()
+
+        if sz == 0:
+            return res_cors('error', 'No user in database'), 200
+
+        if 'file' not in request.files:
+            return res_cors('error', 'Bad request'), 400
+
+        file = request.files['file']
+        img = load_img(file)
+        embeds = model.get_embed(img)
         if len(embeds) == 0:
             return res_cors('error', 'Face not found'), 400
 
-        if len(data_ids) > 0:
-            if check(data_embeds, embeds[0]) != '':
-                return res_cors('error', 'Face exist'), 400
+        ids = []
+        for embed in embeds:
+            idx, dist = find_min(embed, embed_list)
+            if dist <= TOL:
+                ids.append(idx)
 
-        if len(data) > 0 and check(data, embeds[0], 0.6) == '':
-            return res_cors('error', 'Different faces in file'), 400
-
-        data.append(embeds[0].tolist())
-        images.append(img)
-
-    os.mkdir(f'data/{user_id}')
-    i = 1
-    urls = []
-    for img in images:
-        cv2.imwrite(f'data/{user_id}/{i}.jpg', cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
-        urls.append(f'http://{request.host}/data/{user_id}/{i}.jpg')
-        i += 1
-
-    user = {
-        'id': user_id,
-        'data': data,
-        'photo': urls
-    }
-    if db.insert(user):
-        user.pop('_id', None)
-        return res_cors('user', user), 201
-
-    return res_cors('error', 'Database error'), 500
-
-
-@app.route('/api/users', methods=['DELETE'])
-def remove_face():
-    if not request.form or 'id' not in request.form:
-        return res_cors('error', 'Bad request'), 400
-
-    user_id = request.form['id']
-    if not db.find(user_id):
-        return res_cors('error', 'ID not exist'), 400
-
-    if db.remove(user_id):
-        try:
-            shutil.rmtree(f'data/{user_id}')
-        except Exception as ex:
-            print(ex)
-
-        return res_cors('id', user_id), 200
-
-    return res_cors('error', 'Database error'), 500
-
-
-@app.route('/api/users/check', methods=['POST'])
-def check_face():
-    data_ids, data_embeds = db.get_data()
-
-    if len(data_ids) == 0:
-        return res_cors('error', 'No user in database'), 200
-
-    if 'file' not in request.files:
-        return res_cors('error', 'Bad request'), 400
-
-    tol = 0.4
-    if 'tol' in request.form:
-        tol = float(request.form['tol'])
-
-    file = request.files['file']
-    img = fr.load_image_file(file)
-    embeds = fr.face_encodings(img)
-    if len(embeds) == 0:
-        return res_cors('error', 'Face not found'), 400
-
-    ids = []
-    for embed in embeds:
-        ids.append(check(data_embeds, embed, tol))
-    return res_cors('users', data_ids[ids].tolist()), 200
+        return res_cors('users', id_list[ids].tolist()), 200
+    except Exception as ex:
+        logging.exception("message")
+        print(ex)
+        return res_cors('error', 'Something wrong'), 500
 
 
 @app.errorhandler(404)
@@ -169,4 +206,10 @@ def page_not_found(e):
     return res_cors('error', 'Not found'), 404
 
 
-app.run()
+def main():
+    run_with_ngrok(app)
+    app.run()
+
+
+if __name__ == '__main__':
+    main()
