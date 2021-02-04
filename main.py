@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 from flask_ngrok import run_with_ngrok
 from database import DataBase
 import logging
-import sys
+import argparse
 
 app = Flask(__name__, static_url_path='/data', static_folder='data')
 
@@ -234,13 +234,17 @@ def page_not_found(e):
 
 
 def main(argv):
-    app.config["DEBUG"] = False
-
-    if len(argv) and argv == 'remote':
+    if 'remote' in argv and argv.remote == '1':
+        app.config["DEBUG"] = False
         run_with_ngrok(app)
+    else:
+        app.config["DEBUG"] = True
 
     app.run()
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    parse = argparse.ArgumentParser()
+    parse.add_argument('--remote', type=str, default='0')
+    res = parse.parse_args()
+    main(res)
