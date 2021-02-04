@@ -1,73 +1,49 @@
-import numpy as np
 import pymongo
+from flask_pymongo import PyMongo
 
 
-class DataBase:
-    def __init__(self, dbname, password, cluster, collection='main'):
-        client = pymongo.MongoClient(f"mongodb+srv://admin:{password}@{cluster}/"
-                                     f"{dbname}?retryWrites=true&w=majority")
-        db = client[dbname][collection]
-        if db.count_documents({}) == 0:
-            db.create_index([('id', pymongo.ASCENDING)], unique=True)
+class Singleton(type):
+    _instances = {}
 
-        self.db = db
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
 
-    def get_users(self, limit=0, offset=0):
-        sz = self.db.count_documents({})
-        if sz == 0:
-            return [], [], 0
 
-        results = self.db.find().sort('id').limit(limit).skip(offset)
+class DataBase(metaclass=Singleton):
+    def __init__(self, app, dbname, password, cluster, collection='main'):
+        app.config['MONGO_URI'] = f"mongodb+srv://admin:{password}@{cluster}/" \
+                                  f"{dbname}?retryWrites=true&w=majority"
+        self.db = PyMongo(app).db[collection]
 
-        total = np.min(sz, limit)
+        if self.db.count_documents({}) == 0:
+            self.db.create_index([('id', pymongo.ASCENDING)], unique=True)
 
-        ids = np.empty([total, 1])
-        embeds = np.empty([total, 128])
+    def get_user(self, user_id: int):
+        return self.db.find_one({'id': user_id})
 
-        for i in range(total):
+    def get_users(self):
+        size = self.db.count_documents({})
+
+        if size == 0:
+            return [], []
+
+        results = self.db.find()
+
+        ids = [None] * size
+        embeds = [[]] * size
+
+        for i in range(size):
             ids[i] = results[i]['id']
             embeds[i] = results[i]['embed']
 
-        return ids, embeds, sz
-
-    def get_user(self, user_id: int):
-        result = self.db.find_one({'id': user_id})
-        if result:
-            return {
-                'id': result['id'],
-                'embed': result['embed'],
-                'photo': result['photo']
-            }
-        return {}
-
-    def find_all(self, limit=0, offset=0):
-        sz = self.db.count_documents({})
-        if sz == 0:
-            return [], 0
-
-        results = self.db.find().sort('id').limit(limit).skip(offset)
-        users = [
-            {
-                'id': result['id'],
-                'photo': result['photo']
-            }
-            for result in results
-        ]
-
-        return users, sz
-
-    def find(self, user_id: int):
-        result = self.db.find_one({'id': user_id})
-        if result:
-            return {
-                'id': result['id'],
-                'photo': result['photo']
-            }
-        return {}
+        return ids, embeds
 
     def insert(self, user: dict):
         try:
             self.db.insert_one(user)
+
             return True
         except Exception as ex:
             print(f'Insert: {ex}')
@@ -81,11 +57,11 @@ class DataBase:
                 },
                 {
                     "$set": {
-                        'embed': user['embed'],
-                        'photo': user['photo']
+                        'embed': user['embed']
                     }
                 }
             )
+
             return True
         except Exception as ex:
             print(f'Update: {ex}')
@@ -94,6 +70,7 @@ class DataBase:
     def remove(self, user_id: int):
         try:
             self.db.delete_one({'id': user_id})
+
             return True
         except Exception as ex:
             print(f'Delete: {ex}')
