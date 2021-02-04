@@ -129,7 +129,7 @@ def insert():
         return res_cors('error', 'Error'), 500
 
 
-@app.route('/api/user/<int:user_id>', methods=['UPDATE'])
+@app.route('/api/user/<int:user_id>', methods=['PUT'])
 def update(user_id):
     try:
         if 'image' not in request.files:
