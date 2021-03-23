@@ -364,17 +364,17 @@ def create_face_bp(app):
     @face_bp.route('/checkin/<int:ID>', methods=['POST'])
     def check(ID):
         try:
+            """
             v = verify(request.args)
             if v:
                 return v
-
+"""
             if 'image' not in request.files:
                 return res_cors({
                     'code': 400,
                     'message': 'Bad request',
                     'data': ''
                 }), 400
-
             db_ids, db_embeds = db.get_users()
             if not db_ids:
                 return res_cors({
@@ -401,7 +401,7 @@ def create_face_bp(app):
 
                 idx, dist = find_min(embed, db_embeds)
                 if dist <= model.tol:
-                    url = f'{HOST}/webservice/rest/server.php' \
+                    """url = f'{HOST}/webservice/rest/server.php' \
                           f'?moodlewsrestformat=json' \
                           f'&service=moodle_mobile_app' \
                           f'&wstoken={WSTOKEN}' \
@@ -433,7 +433,7 @@ def create_face_bp(app):
                             'data': f'{db_ids[idx]}'
                         }), 404
                     user = r.json()
-                    users.append(user)
+                    users.append(user)"""
 
             return res_cors({
                 'code': 200,
