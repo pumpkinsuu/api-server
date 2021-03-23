@@ -3,10 +3,10 @@ from utilities import *
 
 
 HOST = 'http://localhost:8888/moodle310'
-WSTOKEN = '328f1791e140b1fe5c3632d71c1bbf9f'
+WSTOKEN = '01493cbc6e7d55d02f49bda93c7fde4b'
 TOKEN = 'core_webservice_get_site_info'
 GET_REPORT = ''
-POST_REPORT = 'local_wsgetreports_update_status'
+POST_REPORT = 'local_webservices_update_log'
 ROOM_SCHEDULE = ''
 SESSION = ''
 GET_USER = ''

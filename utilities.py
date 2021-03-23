@@ -2,6 +2,7 @@ import numpy as np
 from PIL import Image
 from flask import jsonify
 import base64
+import io
 
 
 def mean(arr):
@@ -19,7 +20,7 @@ def find_min(x, arr):
 
 
 def load_img(file):
-    img = Image.open(file)
+    img = Image.open(io.BytesIO(base64.b64decode(file)))
     return np.array(img)
 
 

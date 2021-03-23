@@ -364,17 +364,10 @@ def create_face_bp(app):
     @face_bp.route('/checkin/<int:ID>', methods=['POST'])
     def check(ID):
         try:
-            """
             v = verify(request.args)
             if v:
                 return v
-"""
-            if 'image' not in request.files:
-                return res_cors({
-                    'code': 400,
-                    'message': 'Bad request',
-                    'data': ''
-                }), 400
+
             db_ids, db_embeds = db.get_users()
             if not db_ids:
                 return res_cors({
@@ -386,8 +379,8 @@ def create_face_bp(app):
             db_embeds = np.array(db_embeds)
 
             users = []
-            for file in request.files.getlist('image'):
-                img = load_img(file)
+            for image in request.form['image']:
+                img = load_img(image)
 
                 # Check image size
                 if img.shape != model.size:
@@ -401,14 +394,14 @@ def create_face_bp(app):
 
                 idx, dist = find_min(embed, db_embeds)
                 if dist <= model.tol:
-                    """url = f'{HOST}/webservice/rest/server.php' \
+                    url = f'{HOST}/webservice/rest/server.php' \
                           f'?moodlewsrestformat=json' \
                           f'&service=moodle_mobile_app' \
                           f'&wstoken={WSTOKEN}' \
                           f'&wsfunction={POST_REPORT}' \
-                          f'&id={ID}' \
-                          f'&studentID={db_ids[idx]}' \
-                          f'&status=face'
+                          f'&sessionid={ID}' \
+                          f'&sessionid={db_ids[idx]}' \
+                          f'&status=1'
                     r = req.post(url)
 
                     if r.status_code != 200:
@@ -418,7 +411,7 @@ def create_face_bp(app):
                             'data': f'{db_ids[idx]}'
                         }), 404
 
-                    url = f'{HOST}/webservice/rest/server.php' \
+                    """url = f'{HOST}/webservice/rest/server.php' \
                           f'?moodlewsrestformat=json' \
                           f'&service=moodle_mobile_app' \
                           f'&wstoken={WSTOKEN}' \
