@@ -21,6 +21,7 @@ def login():
                 'data': ''
             }), 400
 
+        """
         url = f'{HOST}/login/token.php' \
               f'?moodlewsrestformat=json' \
               f'&service=moodle_mobile_app' \
@@ -34,6 +35,7 @@ def login():
                 'message': 'Successful',
                 'data': r.json()
             }), 200
+        """
 
         if request.form["username"] == 'admin' and request.form["password"] == 'admin':
             return res_cors({

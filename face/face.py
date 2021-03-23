@@ -106,11 +106,13 @@ def create_face_bp(app):
                   f'?moodlewsrestformat=json' \
                   f'&service=moodle_mobile_app' \
                   f'&wstoken={WSTOKEN}' \
-                  f'&wsfunction={LIST_USER}'
+                  f'&wsfunction={GET_USER}' \
+                  f'&id={ID}'
             r = req.post(url)
 
-            users = r.json()
-            if ID not in users:
+            user = r.json()
+            print(user)
+            if user:
                 return res_cors({
                     'code': 404,
                     'message': 'Not found',

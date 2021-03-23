@@ -9,7 +9,6 @@ GET_REPORT = ''
 POST_REPORT = 'local_wsgetreports_update_status'
 ROOM_SCHEDULE = ''
 SESSION = ''
-LIST_USER = ''
 GET_USER = ''
 SECRET = 'secret_key'
 
