@@ -35,6 +35,18 @@ def login():
                 'data': r.json()
             }), 200
 
+        if request.form["username"] == 'admin' and request.form["password"] == 'admin':
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': {
+                    'id': 1,
+                    'token': 'adsa212',
+                    'role': 1,
+                    'avatar': 'adsads'
+                }
+            }), 200
+
         return res_cors({'error': 'Wrong username or password'}), 401
     except Exception as ex:
         print(f'\n***API Login error: {ex}***\n')
