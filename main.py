@@ -16,7 +16,11 @@ app.register_blueprint(api_bp, url_prefix='/api')
 @app.errorhandler(404)
 def page_not_found(e):
     print(e)
-    return res_cors({'error': 'Not found'}), 404
+    return res_cors({
+        'code': 404,
+        'message': 'Not found',
+        'data': ''
+    }), 404
 
 
 def main(argv):

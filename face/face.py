@@ -102,7 +102,7 @@ def create_face_bp(app):
                     'data': ''
                 }), 400
 
-            url = f'{HOST}/webservice/rest/server.php' \
+            """url = f'{HOST}/webservice/rest/server.php' \
                   f'?moodlewsrestformat=json' \
                   f'&service=moodle_mobile_app' \
                   f'&wstoken={WSTOKEN}' \
@@ -118,6 +118,7 @@ def create_face_bp(app):
                     'message': 'Not found',
                     'data': ''
                 }), 404
+            """
 
             db_ids, db_embeds = db.get_users()
             # Check user exist
@@ -130,7 +131,7 @@ def create_face_bp(app):
 
             embeds = []
 
-            front = load_img(request.files['front'])
+            front = load_img_data(request.files['front'])
             if front.shape != model.size:
                 return res_cors({
                     'code': 400,
@@ -139,7 +140,7 @@ def create_face_bp(app):
                 }), 400
             embeds.append(model.get_embed(front))
 
-            left = load_img(request.files['left'])
+            left = load_img_data(request.files['left'])
             if left.shape != model.size:
                 return res_cors({
                     'code': 400,
@@ -148,7 +149,7 @@ def create_face_bp(app):
                 }), 400
             embeds.append(model.get_embed(left))
 
-            right = load_img(request.files['right'])
+            right = load_img_data(request.files['right'])
             if right.shape != model.size:
                 return res_cors({
                     'code': 400,
@@ -195,7 +196,11 @@ def create_face_bp(app):
                     'data': ''
                 }), 201
 
-            return res_cors({'error': 'Database error'}), 500
+            return res_cors({
+                'code': 500,
+                'message': 'Failed',
+                'data': ''
+            }), 500
         except Exception as ex:
             print(f'\n***FACE Insert_users error: {ex}***\n')
             return res_cors({
@@ -241,7 +246,7 @@ def create_face_bp(app):
 
             embeds = []
 
-            front = load_img(request.files['front'])
+            front = load_img_data(request.files['front'])
             if front.shape != model.size:
                 return res_cors({
                     'code': 400,
@@ -250,7 +255,7 @@ def create_face_bp(app):
                 }), 400
             embeds.append(model.get_embed(front))
 
-            left = load_img(request.files['left'])
+            left = load_img_data(request.files['left'])
             if left.shape != model.size:
                 return res_cors({
                     'code': 400,
@@ -259,7 +264,7 @@ def create_face_bp(app):
                 }), 400
             embeds.append(model.get_embed(left))
 
-            right = load_img(request.files['right'])
+            right = load_img_data(request.files['right'])
             if right.shape != model.size:
                 return res_cors({
                     'code': 400,
@@ -368,6 +373,13 @@ def create_face_bp(app):
             if v:
                 return v
 
+            if 'image' not in request.form:
+                return res_cors({
+                    'code': 400,
+                    'message': 'Bad request',
+                    'data': ''
+                }), 400
+
             db_ids, db_embeds = db.get_users()
             if not db_ids:
                 return res_cors({
@@ -379,7 +391,7 @@ def create_face_bp(app):
             db_embeds = np.array(db_embeds)
 
             users = []
-            for image in request.form['image']:
+            for image in request.form.getlist('image'):
                 img = load_img(image)
 
                 # Check image size
@@ -427,6 +439,7 @@ def create_face_bp(app):
                         }), 404
                     user = r.json()
                     users.append(user)"""
+                    users.append(db_ids[idx])
 
             return res_cors({
                 'code': 200,

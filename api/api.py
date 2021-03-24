@@ -29,25 +29,27 @@ def login():
         r = req.post(url)
 
         if r.status_code == 200:
-            return res_cors({
-                'code': 200,
-                'message': 'Successful',
-                'data': r.json()
-            }), 200
+            result = r.json()
 
-        if request.form["username"] == 'admin' and request.form["password"] == 'admin':
-            return res_cors({
-                'code': 200,
-                'message': 'Successful',
-                'data': {
-                    'id': 1,
-                    'token': 'adsa212',
-                    'role': 1,
-                    'avatar': 'adsads'
-                }
-            }), 200
+            if 'token' in result:
+                token = result['token']
 
-        return res_cors({'error': 'Wrong username or password'}), 401
+                return res_cors({
+                    'code': 200,
+                    'message': 'Successful',
+                    'data': {
+                        'token': token,
+                        'avatar': '',
+                        'role': '',
+                        'name': ''
+                    }
+                }), 200
+
+        return res_cors({
+            'code': 401,
+            'message': 'Wrong username or password',
+            'data': ''
+        }), 401
     except Exception as ex:
         print(f'\n***API Login error: {ex}***\n')
         return res_cors({
@@ -85,11 +87,14 @@ def room_schedule():
         r = req.post(url)
 
         if r.status_code == 200:
-            return res_cors({
-                'code': 200,
-                'message': 'Successful',
-                'data': r.json()
-            }), 200
+            result = r.json()
+
+            if 'error' not in result:
+                return res_cors({
+                    'code': 200,
+                    'message': 'Successful',
+                    'data': result
+                }), 200
 
         return res_cors({
             'code': 404,
@@ -121,11 +126,14 @@ def session(ID):
         r = req.post(url)
 
         if r.status_code == 200:
-            return res_cors({
-                'code': 200,
-                'message': 'Successful',
-                'data': r.json()
-            }), 200
+            result = r.json()
+
+            if 'error' not in result:
+                return res_cors({
+                    'code': 200,
+                    'message': 'Successful',
+                    'data': result
+                }), 200
 
         return res_cors({
             'code': 404,
@@ -157,11 +165,14 @@ def student(ID):
         r = req.post(url)
 
         if r.status_code == 200:
-            return res_cors({
-                'code': 200,
-                'message': 'Successful',
-                'data': r.json()
-            }), 200
+            result = r.json()
+
+            if 'error' not in result:
+                return res_cors({
+                    'code': 200,
+                    'message': 'Successful',
+                    'data': result
+                }), 200
 
         return res_cors({
             'code': 404,
@@ -191,6 +202,7 @@ def manual_check(ID):
                 'data': ''
             }), 400
 
+        users = []
         for student in request.json['students']:
             url = f'{HOST}/webservice/rest/server.php' \
                   f'?moodlewsrestformat=json' \
@@ -202,17 +214,16 @@ def manual_check(ID):
                   f'&status={student["status"]}'
             r = req.post(url)
 
-            if r.status_code != 200:
-                return res_cors({
-                    'code': 404,
-                    'message': 'Not found',
-                    'data': f'{student["id"]}'
-                }), 404
+            if r.status_code == 200:
+                result = r.json()
+
+                if 'errorcode' not in result:
+                    users.append(student["id"])
 
         return res_cors({
             'code': 200,
             'message': 'Successful',
-            'data': ''
+            'data': users
         }), 200
     except Exception as ex:
         print(f'\n***API Manual_check error: {ex}***\n')

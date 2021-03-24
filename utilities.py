@@ -24,6 +24,11 @@ def load_img(file):
     return np.array(img)
 
 
+def load_img_data(file):
+    img = Image.open(file)
+    return np.array(img)
+
+
 def encode_img(file):
     with open(file, 'rb') as f:
         return base64.b64encode(f.read())

@@ -2,10 +2,12 @@ import requests as req
 from utilities import *
 
 
-HOST = 'http://localhost:8888/moodle310'
-WSTOKEN = '01493cbc6e7d55d02f49bda93c7fde4b'
-TOKEN = 'core_webservice_get_site_info'
+HOST = 'http://localhost'
+WSTOKEN = 'e7566fcd661773f232f9b5a1fd4bdc8e'
+INFO_TOKEN = 'core_webservice_get_site_info'
+ROLE_ID = 'local_webservices_get_roles'
 GET_REPORT = ''
+GET_REPORT_STUDENT = ''
 POST_REPORT = 'local_webservices_update_log'
 ROOM_SCHEDULE = ''
 SESSION = ''
@@ -25,13 +27,13 @@ def verify(args, role=None):
         return ''
 
     if role is None:
-        role = [1, 2]
+        role = ['teacher', 'admin']
 
     url = f'{HOST}/webservice/rest/server.php' \
           f'?moodlewsrestformat=json' \
           f'&service=moodle_mobile_app' \
           f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={TOKEN}' \
+          f'&wsfunction={INFO_TOKEN}' \
           f'&token={args["token"]}'
     r = req.post(url)
 
