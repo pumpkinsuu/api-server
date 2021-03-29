@@ -7,10 +7,8 @@ import os
 from face.face import create_face_bp
 from api.api import api_bp
 
+
 app = Flask(__name__, static_url_path='/data', static_folder='data')
-face_bp = create_face_bp(app)
-app.register_blueprint(face_bp, url_prefix='/face')
-app.register_blueprint(api_bp, url_prefix='/api')
 
 
 @app.errorhandler(404)
@@ -24,14 +22,17 @@ def page_not_found(e):
 
 
 def main(argv):
-    if 'remote' in argv and argv.remote == 1:
+    if argv.remote:
         run_with_ngrok(app)
-    if 'debug' in argv and argv.debug == 1:
+    if argv.debug:
         app.config["DEBUG"] = True
 
     if not os.path.isdir('data'):
         os.mkdir('data')
 
+    face_bp = create_face_bp(app)
+    app.register_blueprint(face_bp, url_prefix='/face')
+    app.register_blueprint(api_bp, url_prefix='/api')
     app.run()
 
 

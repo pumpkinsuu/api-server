@@ -2,16 +2,22 @@ import pymongo
 from flask_pymongo import PyMongo
 
 
+PASSWORD = 'AdminPass123'
+CLUSTER = 'cluster0.qe6sa.mongodb.net'
+NAME = 'face_db'
+COLLECTION = 'main'
+
+
 class DataBase:
-    def __init__(self, app, dbname, password, cluster, collection='main'):
-        app.config['MONGO_URI'] = f"mongodb+srv://admin:{password}@{cluster}/" \
-                                  f"{dbname}?retryWrites=true&w=majority"
-        self.db = PyMongo(app).db[collection]
+    def __init__(self, app):
+        app.config['MONGO_URI'] = f"mongodb+srv://admin:{PASSWORD}@{CLUSTER}/" \
+                                  f"{NAME}?retryWrites=true&w=majority"
+        self.db = PyMongo(app).db[COLLECTION]
 
         if self.db.count_documents({}) == 0:
             self.db.create_index([('id', pymongo.ASCENDING)], unique=True)
 
-    def get_user(self, user_id: int):
+    def get_user(self, user_id):
         return self.db.find_one({'id': user_id})
 
     def get_users(self):
@@ -58,7 +64,7 @@ class DataBase:
             print(f'Update: {ex}')
             return False
 
-    def remove(self, user_id: int):
+    def remove(self, user_id):
         try:
             self.db.delete_one({'id': user_id})
 

@@ -1,17 +1,11 @@
-from face_model.dlib_model import Model
-from database import DataBase
+from face_service.api import FaceAPI
 from flask import Blueprint, request
 import os
-from config import *
+from moodle_service import *
 
 
 def create_face_bp(app):
-    db_name = 'face_db'
-    db_pass = 'AdminPass123'
-    cluster = 'cluster0.qe6sa.mongodb.net'
-    db = DataBase(app, db_name, db_pass, cluster)
-
-    model = Model()
+    face_api = FaceAPI(app)
     face_bp = Blueprint('face_bp', __name__)
 
     @face_bp.route('/', methods=['GET'])
@@ -21,46 +15,42 @@ def create_face_bp(app):
             if v:
                 return v
 
-            ids, _ = db.get_users()
+            code, result = face_api.get_users()
 
-            if len(ids) != 0:
+            if code == 200:
                 return res_cors({
-                    'code': 200,
+                    'code': code,
                     'message': 'Successful',
-                    'data': ids
-                }), 200
+                    'data': result
+                }), code
 
             return res_cors({
-                'code': 404,
-                'message': 'Not found',
+                'code': code,
+                'message': result,
                 'data': ''
-            }), 404
+            }), code
         except Exception as ex:
             print(f'\n***FACE Get_users error: {ex}***\n')
             return res_cors({
                 'code': 500,
-                'message': 'Internal Server Error',
+                'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<int:ID>', methods=['GET'])
-    def get_user(ID):
+    @face_bp.route('/<username>', methods=['GET'])
+    def get_user(username):
         try:
             v = verify(request.args)
             if v:
                 return v
 
-            user = db.get_user(ID)
+            code, result = face_api.get_user(username)
 
-            if user:
+            if code == 200:
                 return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': {
-                        'front': encode_img(f'data/{user["id"]}_front.jpg'),
-                        'left': encode_img(f'data/{user["id"]}_left.jpg'),
-                        'right': encode_img(f'data/{user["id"]}_right.jpg')
-                    }
+                    'front': f'data/{username}_front.jpg',
+                    'left': f'data/{username}_left.jpg',
+                    'right': f'data/{username}_right.jpg'
                 }), 200
 
             return res_cors({
@@ -72,14 +62,14 @@ def create_face_bp(app):
             print(f'\n***FACE Get_user error: {ex}***\n')
             return res_cors({
                 'code': 500,
-                'message': 'Internal Server Error',
+                'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<int:ID>', methods=['POST'])
-    def insert(ID):
+    @face_bp.route('/<username>', methods=['POST'])
+    def insert(username):
         try:
-            v = verify(request.args)
+            v = verify(request.args, admin=True)
             if v:
                 return v
 
@@ -102,117 +92,40 @@ def create_face_bp(app):
                     'data': ''
                 }), 400
 
-            """url = f'{HOST}/webservice/rest/server.php' \
-                  f'?moodlewsrestformat=json' \
-                  f'&service=moodle_mobile_app' \
-                  f'&wstoken={WSTOKEN}' \
-                  f'&wsfunction={GET_USER}' \
-                  f'&id={ID}'
-            r = req.post(url)
-
-            user = r.json()
-            print(user)
-            if user:
+            if not moodle_user(username):
                 return res_cors({
                     'code': 404,
                     'message': 'Not found',
                     'data': ''
                 }), 404
-            """
 
-            db_ids, db_embeds = db.get_users()
-            # Check user exist
-            if ID in db_ids:
-                return res_cors({
-                    'code': 409,
-                    'message': 'ID registered',
-                    'data': ''
-                }), 409
+            front = load_img(request.files['front'])
+            left = load_img(request.files['left'])
+            right = load_img(request.files['right'])
+            code, result = face_api.create_user(username, front, left, right)
 
-            embeds = []
-
-            front = load_img_data(request.files['front'])
-            if front.shape != model.size:
-                return res_cors({
-                    'code': 400,
-                    'message': f'Image\'s size: {model.size} not {front.shape}',
-                    'data': ''
-                }), 400
-            embeds.append(model.get_embed(front))
-
-            left = load_img_data(request.files['left'])
-            if left.shape != model.size:
-                return res_cors({
-                    'code': 400,
-                    'message': f'Image\'s size: {model.size} not {left.shape}',
-                    'data': ''
-                }), 400
-            embeds.append(model.get_embed(left))
-
-            right = load_img_data(request.files['right'])
-            if right.shape != model.size:
-                return res_cors({
-                    'code': 400,
-                    'message': f'Image\'s size: {model.size} not {right.shape}',
-                    'data': ''
-                }), 400
-            embeds.append(model.get_embed(right))
-
-            # Check same person face
-            if distance(embeds[0], embeds[1]) > model.tol or distance(embeds[0], embeds[2]) > model.tol:
-                return res_cors({
-                    'code': 400,
-                    'message': 'Different faces',
-                    'data': ''
-                }), 400
-
-            # Get mean embeds
-            user = {
-                'id': ID,
-                'embed': mean(embeds)
-            }
-
-            # Check embeds exist
-            if db_embeds:
-                db_embeds = np.array(db_embeds)
-                idx, dist = find_min(user['embed'], db_embeds)
-                if dist < model.tol:
-                    return res_cors({
-                        'code': 409,
-                        'message': 'Face registered',
-                        'data': ''
-                    }), 409
-
-            # Insert user to database
-            user['embed'] = user['embed'].tolist()
-            if db.insert(user):
-                save_img(f'data/{user["id"]}_front.jpg', front)
-                save_img(f'data/{user["id"]}_left.jpg', left)
-                save_img(f'data/{user["id"]}_right.jpg', right)
-
-                return res_cors({
-                    'code': 201,
-                    'message': 'Successful',
-                    'data': ''
-                }), 201
+            if code == 201:
+                front.save(f'data/{username}_front.jpg')
+                left.save(f'data/{username}_left.jpg')
+                right.save(f'data/{username}_right.jpg')
 
             return res_cors({
-                'code': 500,
-                'message': 'Failed',
+                'code': code,
+                'message': result,
                 'data': ''
-            }), 500
+            }), code
         except Exception as ex:
             print(f'\n***FACE Insert_users error: {ex}***\n')
             return res_cors({
                 'code': 500,
-                'message': 'Internal Server Error',
+                'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<int:ID>', methods=['PUT'])
-    def update(ID):
+    @face_bp.route('/<username>', methods=['PUT'])
+    def update(username):
         try:
-            v = verify(request.args)
+            v = verify(request.args, admin=True)
             if v:
                 return v
 
@@ -235,139 +148,61 @@ def create_face_bp(app):
                     'data': ''
                 }), 400
 
-            db_ids, db_embeds = db.get_users()
-            # Check user exist
-            if ID not in db_ids:
-                return res_cors({
-                    'code': 404,
-                    'message': 'Not found',
-                    'data': ''
-                }), 404
+            front = load_img(request.files['front'])
+            left = load_img(request.files['left'])
+            right = load_img(request.files['right'])
+            code, result = face_api.update_user(username, front, left, right)
 
-            embeds = []
-
-            front = load_img_data(request.files['front'])
-            if front.shape != model.size:
-                return res_cors({
-                    'code': 400,
-                    'message': f'Image\'s size: {model.size} not {front.shape}',
-                    'data': ''
-                }), 400
-            embeds.append(model.get_embed(front))
-
-            left = load_img_data(request.files['left'])
-            if left.shape != model.size:
-                return res_cors({
-                    'code': 400,
-                    'message': f'Image\'s size: {model.size} not {left.shape}',
-                    'data': ''
-                }), 400
-            embeds.append(model.get_embed(left))
-
-            right = load_img_data(request.files['right'])
-            if right.shape != model.size:
-                return res_cors({
-                    'code': 400,
-                    'message': f'Image\'s size: {model.size} not {right.shape}',
-                    'data': ''
-                }), 400
-            embeds.append(model.get_embed(right))
-
-            # Check same person face
-            if distance(embeds[0], embeds[1]) > model.tol or distance(embeds[0], embeds[2]) > model.tol:
-                return res_cors({
-                    'code': 400,
-                    'message': 'Different faces',
-                    'data': ''
-                }), 400
-
-            # Get mean embeds
-            user = {
-                'id': ID,
-                'embed': mean(embeds)
-            }
-
-            # Check embeds exist
-            if db_embeds:
-                db_embeds = np.array(db_embeds)
-                idx, dist = find_min(user['embed'], db_embeds)
-                if dist < model.tol and db_ids[idx] != user['id']:
-                    return res_cors({
-                        'code': 409,
-                        'message': 'Face registered',
-                        'data': ''
-                    }), 409
-
-            # Update user to database
-            user['embed'] = user['embed'].tolist()
-            if db.update(user):
-                save_img(f'data/{user["id"]}_front.jpg', front)
-                save_img(f'data/{user["id"]}_left.jpg', left)
-                save_img(f'data/{user["id"]}_right.jpg', right)
-
-                return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': ''
-                }), 200
+            if code == 200:
+                front.save(f'data/{username}_front.jpg')
+                left.save(f'data/{username}_left.jpg')
+                right.save(f'data/{username}_right.jpg')
 
             return res_cors({
-                'code': 500,
-                'message': 'Failed',
+                'code': code,
+                'message': result,
                 'data': ''
-            }), 500
+            }), code
         except Exception as ex:
             print(f'\n***FACE Update_users error: {ex}***\n')
             return res_cors({
                 'code': 500,
-                'message': 'Internal Server Error',
+                'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<int:ID>', methods=['DELETE'])
-    def remove(ID):
+    @face_bp.route('/<username>', methods=['DELETE'])
+    def remove(username):
         try:
-            v = verify(request.args)
+            v = verify(request.args, admin=True)
             if v:
                 return v
 
-            ids, _ = db.get_users()
-            if ID not in ids:
-                return res_cors({
-                    'code': 404,
-                    'message': 'Not found',
-                    'data': ''
-                }), 404
+            code, result = face_api.remove_user(username)
 
-            if db.remove(ID):
-                if os.path.isfile(f'data/{ID}_front.jpg'):
-                    os.remove(f'data/{ID}_front.jpg')
-                    if os.path.isfile(f'data/{ID}_left.jpg'):
-                        os.remove(f'data/{ID}_left.jpg')
-                        if os.path.isfile(f'data/{ID}_right.jpg'):
-                            os.remove(f'data/{ID}_right.jpg')
-
-                return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': ''
-                }), 200
+            if code == 200:
+                if os.path.isfile(f'data/{username}_front.jpg'):
+                    os.remove(f'data/{username}_front.jpg')
+                    if os.path.isfile(f'data/{username}_left.jpg'):
+                        os.remove(f'data/{username}_left.jpg')
+                        if os.path.isfile(f'data/{username}_right.jpg'):
+                            os.remove(f'data/{username}_right.jpg')
 
             return res_cors({
-                'code': 500,
-                'message': 'Failed',
+                'code': code,
+                'message': result,
                 'data': ''
-            }), 500
+            }), code
         except Exception as ex:
             print(f'\n***FACE Remove_users error: {ex}***\n')
             return res_cors({
                 'code': 500,
-                'message': 'Internal Server Error',
+                'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/checkin/<int:ID>', methods=['POST'])
-    def check(ID):
+    @face_bp.route('/checkin/<session_id>', methods=['POST'])
+    def check(session_id):
         try:
             v = verify(request.args)
             if v:
@@ -380,66 +215,22 @@ def create_face_bp(app):
                     'data': ''
                 }), 400
 
-            db_ids, db_embeds = db.get_users()
-            if not db_ids:
-                return res_cors({
-                    'code': 500,
-                    'message': 'Database empty',
-                    'data': ''
-                }), 500
-
-            db_embeds = np.array(db_embeds)
-
             users = []
             for image in request.form.getlist('image'):
-                img = load_img(image)
+                img = load_img_base64(image)
 
-                # Check image size
-                if img.shape != model.size:
-                    return res_cors({
-                        'code': 400,
-                        'message': f'Image\'s size: {model.size} not {img.shape}',
-                        'data': ''
-                    }), 400
+                code, username = face_api.verify(img)
+                if code != 200:
+                    continue
 
-                embed = model.get_embed(img)
+                if not moodle_checkin(session_id, username, 1):
+                    continue
 
-                idx, dist = find_min(embed, db_embeds)
-                if dist <= model.tol:
-                    url = f'{HOST}/webservice/rest/server.php' \
-                          f'?moodlewsrestformat=json' \
-                          f'&service=moodle_mobile_app' \
-                          f'&wstoken={WSTOKEN}' \
-                          f'&wsfunction={POST_REPORT}' \
-                          f'&sessionid={ID}' \
-                          f'&sessionid={db_ids[idx]}' \
-                          f'&status=1'
-                    r = req.post(url)
-
-                    if r.status_code != 200:
-                        return res_cors({
-                            'code': 404,
-                            'message': 'Not found',
-                            'data': f'{db_ids[idx]}'
-                        }), 404
-
-                    """url = f'{HOST}/webservice/rest/server.php' \
-                          f'?moodlewsrestformat=json' \
-                          f'&service=moodle_mobile_app' \
-                          f'&wstoken={WSTOKEN}' \
-                          f'&wsfunction={GET_USER}' \
-                          f'&id={db_ids[idx]}'
-                    r = req.post(url)
-
-                    if r.status_code != 200:
-                        return res_cors({
-                            'code': 404,
-                            'message': 'Not found',
-                            'data': f'{db_ids[idx]}'
-                        }), 404
-                    user = r.json()
-                    users.append(user)"""
-                    users.append(db_ids[idx])
+                user = moodle_user(username)
+                if user:
+                    users.append({
+                        user
+                    })
 
             return res_cors({
                 'code': 200,
@@ -450,7 +241,7 @@ def create_face_bp(app):
             print(f'\n***FACE Check_user error: {ex}***\n')
             return res_cors({
                 'code': 500,
-                'message': 'Internal Server Error',
+                'message': str(ex),
                 'data': ''
             }), 500
 

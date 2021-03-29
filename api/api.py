@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from config import *
+from moodle_service import *
 
 
 api_bp = Blueprint('api_bp', __name__)
@@ -21,29 +21,16 @@ def login():
                 'data': ''
             }), 400
 
-        url = f'{HOST}/login/token.php' \
-              f'?moodlewsrestformat=json' \
-              f'&service=moodle_mobile_app' \
-              f'&username={request.form["username"]}' \
-              f'&password={request.form["password"]}'
-        r = req.post(url)
+        result = moodle_login(request.form['username'], request.form['password'])
+        if result:
+            user = moodle_user(request.form['username'])
+            user['token'] = result['token']
 
-        if r.status_code == 200:
-            result = r.json()
-
-            if 'token' in result:
-                token = result['token']
-
-                return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': {
-                        'token': token,
-                        'avatar': '',
-                        'role': '',
-                        'name': ''
-                    }
-                }), 200
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': user
+            }), 200
 
         return res_cors({
             'code': 401,
@@ -54,7 +41,7 @@ def login():
         print(f'\n***API Login error: {ex}***\n')
         return res_cors({
             'code': 500,
-            'message': 'Internal Server Error',
+            'message': str(ex),
             'data': ''
         }), 500
 
@@ -62,7 +49,7 @@ def login():
 @api_bp.route('/room-schedules', methods=['GET'])
 def room_schedule():
     try:
-        if 'id' not in request.args:
+        if 'roomid' not in request.args:
             return res_cors({
                 'code': 400,
                 'message': 'Bad request',
@@ -79,22 +66,13 @@ def room_schedule():
         if v:
             return v
 
-        url = f'{HOST}/webservice/rest/server.php' \
-              f'?moodlewsrestformat=json' \
-              f'&service=moodle_mobile_app' \
-              f'&wstoken={WSTOKEN}' \
-              f'&wsfunction={ROOM_SCHEDULE}'
-        r = req.post(url)
-
-        if r.status_code == 200:
-            result = r.json()
-
-            if 'error' not in result:
-                return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': result
-                }), 200
+        schedule = moodle_room_schedule(request.args['roomid'], request.args['date'])
+        if schedule:
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': schedule
+            }), 200
 
         return res_cors({
             'code': 404,
@@ -105,35 +83,25 @@ def room_schedule():
         print(f'\n***API Get_schedule error: {ex}***\n')
         return res_cors({
             'code': 500,
-            'message': 'Internal Server Error',
+            'message': str(ex),
             'data': ''
         }), 500
 
 
-@api_bp.route('/session/<int:ID>', methods=['GET'])
-def session(ID):
+@api_bp.route('/session/<session_id>', methods=['GET'])
+def get_session(session_id):
     try:
         v = verify(request.args)
         if v:
             return v
 
-        url = f'{HOST}/webservice/rest/server.php' \
-              f'?moodlewsrestformat=json' \
-              f'&service=moodle_mobile_app' \
-              f'&wstoken={WSTOKEN}' \
-              f'&wsfunction={SESSION}' \
-              f'&id={ID}'
-        r = req.post(url)
-
-        if r.status_code == 200:
-            result = r.json()
-
-            if 'error' not in result:
-                return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': result
-                }), 200
+        session = moodle_session(session_id)
+        if session:
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': session
+            }), 200
 
         return res_cors({
             'code': 404,
@@ -144,35 +112,96 @@ def session(ID):
         print(f'\n***API Get_session error: {ex}***\n')
         return res_cors({
             'code': 500,
-            'message': 'Internal Server Error',
+            'message': str(ex),
             'data': ''
         }), 500
 
 
-@api_bp.route('/students/<int:ID>', methods=['GET'])
-def student(ID):
+@api_bp.route('/log', methods=['GET'])
+def get_log():
     try:
         v = verify(request.args)
         if v:
             return v
 
-        url = f'{HOST}/webservice/rest/server.php' \
-              f'?moodlewsrestformat=json' \
-              f'&service=moodle_mobile_app' \
-              f'&wstoken={WSTOKEN}' \
-              f'&wsfunction={GET_USER}' \
-              f'&id={ID}'
-        r = req.post(url)
+        if 'studentid' not in request.args:
+            return res_cors({
+                'code': 400,
+                'message': 'Bad request',
+                'data': ''
+            }), 400
+        if 'sessionid' not in request.args:
+            return res_cors({
+                'code': 400,
+                'message': 'Bad request',
+                'data': ''
+            }), 400
 
-        if r.status_code == 200:
-            result = r.json()
+        log = moodle_log(request.args['studentid'], request.args['sessionid'])
+        if log:
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': log
+            }), 200
 
-            if 'error' not in result:
-                return res_cors({
-                    'code': 200,
-                    'message': 'Successful',
-                    'data': result
-                }), 200
+        return res_cors({
+            'code': 404,
+            'message': 'Not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_session error: {ex}***\n')
+        return res_cors({
+            'code': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
+@api_bp.route('/teacher-schedules/<attendance_id>', methods=['GET'])
+def get_logs(attendance_id):
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        logs = moodle_logs(attendance_id)
+        if logs:
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': logs
+            }), 200
+
+        return res_cors({
+            'code': 404,
+            'message': 'Not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_session error: {ex}***\n')
+        return res_cors({
+            'code': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
+@api_bp.route('/students/<username>', methods=['GET'])
+def get_student(username):
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        student = moodle_user(username)
+        if student:
+            return res_cors({
+                'code': 200,
+                'message': 'Successful',
+                'data': student
+            }), 200
 
         return res_cors({
             'code': 404,
@@ -183,13 +212,13 @@ def student(ID):
         print(f'\n***API Get_student error: {ex}***\n')
         return res_cors({
             'code': 500,
-            'message': 'Internal Server Error',
+            'message': str(ex),
             'data': ''
         }), 500
 
 
-@api_bp.route('/update-attendance-log/<int:ID>', methods=['POST'])
-def manual_check(ID):
+@api_bp.route('/update-attendance-log/<session_id>', methods=['POST'])
+def manual_check(session_id):
     try:
         v = verify(request.args)
         if v:
@@ -202,34 +231,19 @@ def manual_check(ID):
                 'data': ''
             }), 400
 
-        users = []
         for student in request.json['students']:
-            url = f'{HOST}/webservice/rest/server.php' \
-                  f'?moodlewsrestformat=json' \
-                  f'&service=moodle_mobile_app' \
-                  f'&wstoken={WSTOKEN}' \
-                  f'&wsfunction={POST_REPORT}' \
-                  f'&id={ID}' \
-                  f'&studentID={student["id"]}' \
-                  f'&status={student["status"]}'
-            r = req.post(url)
-
-            if r.status_code == 200:
-                result = r.json()
-
-                if 'errorcode' not in result:
-                    users.append(student["id"])
+            moodle_checkin(session_id, student['id'], student['status'])
 
         return res_cors({
             'code': 200,
             'message': 'Successful',
-            'data': users
+            'data': ''
         }), 200
     except Exception as ex:
         print(f'\n***API Manual_check error: {ex}***\n')
         return res_cors({
             'code': 500,
-            'message': 'Internal Server Error',
+            'message': str(ex),
             'data': ''
         }), 500
 
