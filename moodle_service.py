@@ -60,7 +60,7 @@ def verify(args, admin=False):
     if 'token' not in args:
         return res_cors({
             'code': 400,
-            'message': 'Bad request',
+            'message': 'Missing token',
             'data': ''
         }), 400
 

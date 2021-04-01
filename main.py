@@ -16,7 +16,7 @@ def page_not_found(e):
     print(e)
     return res_cors({
         'code': 404,
-        'message': 'Not found',
+        'message': 'Page not found',
         'data': ''
     }), 404
 

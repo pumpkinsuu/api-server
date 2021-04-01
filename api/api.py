@@ -11,13 +11,13 @@ def login():
         if 'username' not in request.form:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "username"',
                 'data': ''
             }), 400
         if 'password' not in request.form:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "password"',
                 'data': ''
             }), 400
 
@@ -52,13 +52,13 @@ def room_schedule():
         if 'roomid' not in request.args:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "roomid"',
                 'data': ''
             }), 400
         if 'date' not in request.args:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "date"',
                 'data': ''
             }), 400
 
@@ -127,13 +127,13 @@ def get_log():
         if 'studentid' not in request.args:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "studentid"',
                 'data': ''
             }), 400
         if 'sessionid' not in request.args:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "sessionid"',
                 'data': ''
             }), 400
 
@@ -227,7 +227,7 @@ def manual_check(session_id):
         if 'students' not in request.json:
             return res_cors({
                 'code': 400,
-                'message': 'Bad request',
+                'message': 'Missing "students"',
                 'data': ''
             }), 400
 

@@ -20,30 +20,27 @@ def find_min(x, arr):
 class FaceAPI:
     def __init__(self, app):
         self.model = Model()
-        self.tol = 0.37
-        self.size = (150, 150)
-        self.face_location = [(0, 150, 150, 0)]
         self.db = DataBase(app)
 
     def create_user(self, ID, front, left, right):
         db_ids, db_embeds = self.db.get_users()
 
         if ID in db_ids:
-            return 409, 'ID registered'
+            return 409, 'Username already exists'
 
         front_embed = self.model.get_embed(front)
         left_embed = self.model.get_embed(left)
         right_embed = self.model.get_embed(right)
 
-        if distance(front_embed, left_embed) > self.tol or distance(front_embed, right_embed) > self.tol:
+        if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
             return 400, 'Different faces'
 
         embed = mean([front_embed, left_embed, right_embed])
 
         db_embeds = np.array(db_embeds)
         idx, dist = find_min(embed, db_embeds)
-        if dist < self.tol:
-            return 409, 'Face registered'
+        if dist < self.model.tol:
+            return 409, 'Face already exists'
 
         if self.db.insert({
             'id': ID,
@@ -57,21 +54,21 @@ class FaceAPI:
         db_ids, db_embeds = self.db.get_users()
 
         if ID not in db_ids:
-            return 404, 'ID not registered'
+            return 404, 'Username not registered'
 
         front_embed = self.model.get_embed(front)
         left_embed = self.model.get_embed(left)
         right_embed = self.model.get_embed(right)
 
-        if distance(front_embed, left_embed) > self.tol or distance(front_embed, right_embed) > self.tol:
+        if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
             return 400, 'Different faces'
 
         embed = mean([front_embed, left_embed, right_embed])
 
         db_embeds = np.array(db_embeds)
         idx, dist = find_min(embed, db_embeds)
-        if dist < self.tol and db_ids[idx] != ID:
-            return 409, 'Face registered'
+        if dist < self.model.tol and db_ids[idx] != ID:
+            return 409, 'Face already exists'
 
         if self.db.update({
             'id': ID,
@@ -85,7 +82,7 @@ class FaceAPI:
         ids, _ = self.db.get_users()
 
         if ID not in ids:
-            return 404, 'ID not registered'
+            return 404, 'Username not registered'
 
         if self.db.remove(ID):
             return 200, 'Successful'
@@ -99,7 +96,7 @@ class FaceAPI:
 
         embed = self.model.get_embed(image)
         idx, dist = find_min(embed, db_embeds)
-        if dist <= self.tol:
+        if dist <= self.model.tol:
             return 200, db_ids[idx]
 
         return 404, 0
@@ -109,11 +106,11 @@ class FaceAPI:
         if user:
             return 200, 'Exist'
 
-        return 404, 'Not found'
+        return 404, 'Username not found'
 
     def get_users(self):
         ids, _ = self.db.get_users()
         if len(ids) != 0:
             return 200, ids
 
-        return 404, 'Not found'
+        return 500, 'Database empty'

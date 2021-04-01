@@ -22,7 +22,7 @@ class Model:
             return graph
 
     @staticmethod
-    def prewhiten(x):
+    def __prewhiten(x):
         mean = np.mean(x)
         std = np.std(x)
         std_adj = np.maximum(std, 1.0 / np.sqrt(x.size))
@@ -30,16 +30,16 @@ class Model:
         return y
 
     @staticmethod
-    def l2_normalize(x, axis=-1, epsilon=1e-10):
+    def __l2_normalize(x, axis=-1, epsilon=1e-10):
         output = x / np.sqrt(np.maximum(np.sum(np.square(x), axis=axis, keepdims=True), epsilon))
         return output
 
     def get_embed(self, img):
-        data = [self.prewhiten(img)]
+        data = [self.__prewhiten(img)]
         feed_dict = {self.input: data, self.placeholder: False}
 
         embed = self.sess.run(self.output, feed_dict=feed_dict)[0]
-        embed = self.l2_normalize(embed)
+        embed = self.__l2_normalize(embed)
 
         return embed
 

@@ -76,26 +76,26 @@ def create_face_bp(app):
             if 'front' not in request.files:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "front"',
                     'data': ''
                 }), 400
             if 'left' not in request.files:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.files:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "right"',
                     'data': ''
                 }), 400
 
             if not moodle_user(username):
                 return res_cors({
                     'code': 404,
-                    'message': 'Not found',
+                    'message': 'Username not found',
                     'data': ''
                 }), 404
 
@@ -132,19 +132,19 @@ def create_face_bp(app):
             if 'front' not in request.files:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "front"',
                     'data': ''
                 }), 400
             if 'left' not in request.files:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.files:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "right"',
                     'data': ''
                 }), 400
 
@@ -211,7 +211,7 @@ def create_face_bp(app):
             if 'image' not in request.form:
                 return res_cors({
                     'code': 400,
-                    'message': 'Bad request',
+                    'message': 'Missing "image"',
                     'data': ''
                 }), 400
 
