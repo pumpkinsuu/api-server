@@ -67,10 +67,11 @@ class FaceAPI:
 
         embed = mean([front_embed, left_embed, right_embed])
 
-        db_embeds = np.array(db_embeds)
-        idx, dist = find_min(embed, db_embeds)
-        if dist < self.model.tol and db_ids[idx] != ID:
-            return 409, 'Face already exists'
+        if len(db_embeds):
+            db_embeds = np.array(db_embeds)
+            idx, dist = find_min(embed, db_embeds)
+            if dist < self.model.tol and db_ids[idx] != ID:
+                return 409, 'Face already exists'
 
         if self.db.update({
             'id': ID,

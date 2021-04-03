@@ -57,9 +57,9 @@ def create_face_bp(app):
                 }
 
                 return res_cors({
-                    'front': f'data/{username}_front.jpg',
+                    """'front': f'data/{username}_front.jpg',
                     'left': f'data/{username}_left.jpg',
-                    'right': f'data/{username}_right.jpg',
+                    'right': f'data/{username}_right.jpg',"""
                     'status': 200,
                     'message': 'Successful',
                     'data': data
@@ -118,9 +118,9 @@ def create_face_bp(app):
             code, result = face_api.create_user(username, front, left, right)
 
             if code == 201:
-                front.save(f'data/{username}_front.jpg')
+                """front.save(f'data/{username}_front.jpg')
                 left.save(f'data/{username}_left.jpg')
-                right.save(f'data/{username}_right.jpg')
+                right.save(f'data/{username}_right.jpg')"""
 
                 code, result = photo_api.create_user(
                     username,
@@ -176,9 +176,9 @@ def create_face_bp(app):
             code, result = face_api.update_user(username, front, left, right)
 
             if code == 200:
-                front.save(f'data/{username}_front.jpg')
+                """front.save(f'data/{username}_front.jpg')
                 left.save(f'data/{username}_left.jpg')
-                right.save(f'data/{username}_right.jpg')
+                right.save(f'data/{username}_right.jpg')"""
 
                 code, result = photo_api.update_user(
                     username,
@@ -210,12 +210,12 @@ def create_face_bp(app):
             code, result = face_api.remove_user(username)
 
             if code == 200:
-                if os.path.isfile(f'data/{username}_front.jpg'):
+                """if os.path.isfile(f'data/{username}_front.jpg'):
                     os.remove(f'data/{username}_front.jpg')
                     if os.path.isfile(f'data/{username}_left.jpg'):
                         os.remove(f'data/{username}_left.jpg')
                         if os.path.isfile(f'data/{username}_right.jpg'):
-                            os.remove(f'data/{username}_right.jpg')
+                            os.remove(f'data/{username}_right.jpg')"""
 
                 code, result = photo_api.remove_user(username)
 
