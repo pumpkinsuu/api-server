@@ -67,7 +67,7 @@ def create_face_bp(app):
 
             return res_cors({
                 'status': 404,
-                'message': 'Not found',
+                'message': result,
                 'data': ''
             }), 404
         except Exception as ex:
@@ -114,6 +114,7 @@ def create_face_bp(app):
             front = load_img(request.files['front'])
             left = load_img(request.files['left'])
             right = load_img(request.files['right'])
+
             code, result = face_api.create_user(username, front, left, right)
 
             if code == 201:
@@ -123,10 +124,12 @@ def create_face_bp(app):
 
                 code, result = photo_api.create_user(
                     username,
-                    request.files['front'],
-                    request.files['left'],
-                    request.files['right']
+                    encode_img(left),
+                    encode_img(right),
+                    encode_img(front)
                 )
+                if code != 200:
+                    face_api.remove_user(username)
 
             return res_cors({
                 'status': code,
@@ -179,9 +182,9 @@ def create_face_bp(app):
 
                 code, result = photo_api.update_user(
                     username,
-                    request.files['front'],
-                    request.files['left'],
-                    request.files['right']
+                    encode_img(left),
+                    encode_img(right),
+                    encode_img(front)
                 )
 
             return res_cors({
@@ -261,9 +264,7 @@ def create_face_bp(app):
                     if code == 200:
                         user['avatar'] = result['front']
 
-                    users.append({
-                        user
-                    })
+                    users.append(user)
 
             return res_cors({
                 'status': 200,

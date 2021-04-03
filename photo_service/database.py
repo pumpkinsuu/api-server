@@ -15,7 +15,7 @@ class DataBase:
         self.db = PyMongo(app).db[COLLECTION]
 
         if self.db.count_documents({}) == 0:
-            self.db.create_index([('id', pymongo.ASCENDING)], unique=True)
+            self.db.create_index([('id', pymongo.TEXT)], unique=True)
 
     def get_user(self, user_id):
         return self.db.find_one({'id': user_id})
