@@ -124,9 +124,9 @@ def create_face_bp(app):
 
                 code, result = photo_api.create_user(
                     username,
-                    encode_img(left),
-                    encode_img(right),
-                    encode_img(front)
+                    left=encode_img(left),
+                    right=encode_img(right),
+                    front=encode_img(front)
                 )
                 if code != 200:
                     face_api.remove_user(username)
@@ -182,9 +182,9 @@ def create_face_bp(app):
 
                 code, result = photo_api.update_user(
                     username,
-                    encode_img(left),
-                    encode_img(right),
-                    encode_img(front)
+                    left=encode_img(left),
+                    right=encode_img(right),
+                    front=encode_img(front)
                 )
 
             return res_cors({
