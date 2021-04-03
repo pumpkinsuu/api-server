@@ -59,7 +59,7 @@ def moodle_login(username, password):
 def verify(args, admin=False):
     if 'token' not in args:
         return res_cors({
-            'code': 400,
+            'status': 400,
             'message': 'Missing token',
             'data': ''
         }), 400
@@ -74,7 +74,7 @@ def verify(args, admin=False):
     result = moodle_token(args['token'])
     if not result:
         return res_cors({
-            'code': 401,
+            'status': 401,
             'message': 'Unauthorized request',
             'data': ''
         }), 401
@@ -82,7 +82,7 @@ def verify(args, admin=False):
     user = moodle_user(result['username'])
     if not user or user['roleid'] not in role:
         return res_cors({
-            'code': 401,
+            'status': 401,
             'message': 'No permission',
             'data': ''
         }), 401

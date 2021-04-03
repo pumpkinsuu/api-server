@@ -10,13 +10,13 @@ def login():
     try:
         if 'username' not in request.form:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "username"',
                 'data': ''
             }), 400
         if 'password' not in request.form:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "password"',
                 'data': ''
             }), 400
@@ -27,20 +27,20 @@ def login():
             user['token'] = result['token']
 
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': user
             }), 200
 
         return res_cors({
-            'code': 401,
+            'status': 401,
             'message': 'Wrong username or password',
             'data': ''
         }), 401
     except Exception as ex:
         print(f'\n***API Login error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500
@@ -51,13 +51,13 @@ def room_schedule():
     try:
         if 'roomid' not in request.args:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "roomid"',
                 'data': ''
             }), 400
         if 'date' not in request.args:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "date"',
                 'data': ''
             }), 400
@@ -69,20 +69,20 @@ def room_schedule():
         schedule = moodle_room_schedule(request.args['roomid'], request.args['date'])
         if schedule:
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': schedule
             }), 200
 
         return res_cors({
-            'code': 404,
+            'status': 404,
             'message': 'Not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_schedule error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500
@@ -98,20 +98,20 @@ def get_session(session_id):
         session = moodle_session(session_id)
         if session:
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': session
             }), 200
 
         return res_cors({
-            'code': 404,
+            'status': 404,
             'message': 'Not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500
@@ -126,13 +126,13 @@ def get_log():
 
         if 'studentid' not in request.args:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "studentid"',
                 'data': ''
             }), 400
         if 'sessionid' not in request.args:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "sessionid"',
                 'data': ''
             }), 400
@@ -140,20 +140,20 @@ def get_log():
         log = moodle_log(request.args['studentid'], request.args['sessionid'])
         if log:
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': log
             }), 200
 
         return res_cors({
-            'code': 404,
+            'status': 404,
             'message': 'Not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500
@@ -169,20 +169,20 @@ def get_logs(attendance_id):
         logs = moodle_logs(attendance_id)
         if logs:
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': logs
             }), 200
 
         return res_cors({
-            'code': 404,
+            'status': 404,
             'message': 'Not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500
@@ -198,20 +198,20 @@ def get_student(username):
         student = moodle_user(username)
         if student:
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': student
             }), 200
 
         return res_cors({
-            'code': 404,
+            'status': 404,
             'message': 'Not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_student error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500
@@ -226,7 +226,7 @@ def manual_check(session_id):
 
         if 'students' not in request.json:
             return res_cors({
-                'code': 400,
+                'status': 400,
                 'message': 'Missing "students"',
                 'data': ''
             }), 400
@@ -235,14 +235,14 @@ def manual_check(session_id):
             moodle_checkin(session_id, student['id'], student['status'])
 
         return res_cors({
-            'code': 200,
+            'status': 200,
             'message': 'Successful',
             'data': ''
         }), 200
     except Exception as ex:
         print(f'\n***API Manual_check error: {ex}***\n')
         return res_cors({
-            'code': 500,
+            'status': 500,
             'message': str(ex),
             'data': ''
         }), 500

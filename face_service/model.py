@@ -13,6 +13,6 @@ class Model:
         return np.array(img.resize(self.size))
 
     def get_embed(self, img):
-        img = self.__preprocess(img)
-        embed = self.model.face_encodings(img, self.face_location)[0]
+        _img = self.__preprocess(img)
+        embed = self.model.face_encodings(_img, self.face_location)[0]
         return embed

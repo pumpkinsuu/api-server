@@ -3,8 +3,8 @@ from flask_pymongo import PyMongo
 
 
 PASSWORD = 'AdminPass123'
-CLUSTER = 'cluster0.qe6sa.mongodb.net'
-NAME = 'face_db'
+CLUSTER = 'facecluster.oy4x6.mongodb.net'
+NAME = 'photo_db'
 COLLECTION = 'main'
 
 
@@ -19,23 +19,6 @@ class DataBase:
 
     def get_user(self, user_id):
         return self.db.find_one({'id': user_id})
-
-    def get_users(self):
-        size = self.db.count_documents({})
-
-        if size == 0:
-            return [], []
-
-        results = self.db.find()
-
-        ids = [None] * size
-        embeds = [[]] * size
-
-        for i in range(size):
-            ids[i] = results[i]['id']
-            embeds[i] = results[i]['embed']
-
-        return ids, embeds
 
     def create(self, user: dict):
         try:
@@ -54,7 +37,9 @@ class DataBase:
                 },
                 {
                     "$set": {
-                        'embed': user['embed']
+                        'left': user['left'],
+                        'right': user['right'],
+                        'front': user['front']
                     }
                 }
             )

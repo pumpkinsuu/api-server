@@ -25,7 +25,7 @@ class FaceAPI:
     def create_user(self, ID, front, left, right):
         db_ids, db_embeds = self.db.get_users()
 
-        if ID in db_ids:
+        if self.db.get_user(ID):
             return 409, 'Username already exists'
 
         front_embed = self.model.get_embed(front)
@@ -42,7 +42,7 @@ class FaceAPI:
         if dist < self.model.tol:
             return 409, 'Face already exists'
 
-        if self.db.insert({
+        if self.db.create({
             'id': ID,
             'embed': embed.tolist()
         }):
@@ -53,7 +53,7 @@ class FaceAPI:
     def update_user(self, ID, front, left, right):
         db_ids, db_embeds = self.db.get_users()
 
-        if ID not in db_ids:
+        if not self.db.get_user(ID):
             return 404, 'Username not registered'
 
         front_embed = self.model.get_embed(front)
@@ -79,9 +79,7 @@ class FaceAPI:
         return 500, 'Internal Server Error'
 
     def remove_user(self, ID):
-        ids, _ = self.db.get_users()
-
-        if ID not in ids:
+        if not self.db.get_user(ID):
             return 404, 'Username not registered'
 
         if self.db.remove(ID):

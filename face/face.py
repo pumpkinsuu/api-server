@@ -1,4 +1,5 @@
 from face_service.api import FaceAPI
+from photo_service.api import PhotoApi
 from flask import Blueprint, request
 import os
 from moodle_service import *
@@ -6,6 +7,7 @@ from moodle_service import *
 
 def create_face_bp(app):
     face_api = FaceAPI(app)
+    photo_api = PhotoApi(app)
     face_bp = Blueprint('face_bp', __name__)
 
     @face_bp.route('/', methods=['GET'])
@@ -19,20 +21,20 @@ def create_face_bp(app):
 
             if code == 200:
                 return res_cors({
-                    'code': code,
+                    'status': code,
                     'message': 'Successful',
                     'data': result
                 }), code
 
             return res_cors({
-                'code': code,
+                'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
             print(f'\n***FACE Get_users error: {ex}***\n')
             return res_cors({
-                'code': 500,
+                'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
@@ -47,21 +49,31 @@ def create_face_bp(app):
             code, result = face_api.get_user(username)
 
             if code == 200:
+                code, result = photo_api.get_user(username)
+                data = {
+                    'left': result['left'],
+                    'right': result['right'],
+                    'front': result['front']
+                }
+
                 return res_cors({
                     'front': f'data/{username}_front.jpg',
                     'left': f'data/{username}_left.jpg',
-                    'right': f'data/{username}_right.jpg'
+                    'right': f'data/{username}_right.jpg',
+                    'status': 200,
+                    'message': 'Successful',
+                    'data': data
                 }), 200
 
             return res_cors({
-                'code': 404,
+                'status': 404,
                 'message': 'Not found',
                 'data': ''
             }), 404
         except Exception as ex:
             print(f'\n***FACE Get_user error: {ex}***\n')
             return res_cors({
-                'code': 500,
+                'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
@@ -75,26 +87,26 @@ def create_face_bp(app):
 
             if 'front' not in request.files:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "front"',
                     'data': ''
                 }), 400
             if 'left' not in request.files:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.files:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "right"',
                     'data': ''
                 }), 400
 
             if not moodle_user(username):
                 return res_cors({
-                    'code': 404,
+                    'status': 404,
                     'message': 'Username not found',
                     'data': ''
                 }), 404
@@ -109,15 +121,22 @@ def create_face_bp(app):
                 left.save(f'data/{username}_left.jpg')
                 right.save(f'data/{username}_right.jpg')
 
+                code, result = photo_api.create_user(
+                    username,
+                    request.files['front'],
+                    request.files['left'],
+                    request.files['right']
+                )
+
             return res_cors({
-                'code': code,
+                'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
             print(f'\n***FACE Insert_users error: {ex}***\n')
             return res_cors({
-                'code': 500,
+                'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
@@ -131,19 +150,19 @@ def create_face_bp(app):
 
             if 'front' not in request.files:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "front"',
                     'data': ''
                 }), 400
             if 'left' not in request.files:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.files:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "right"',
                     'data': ''
                 }), 400
@@ -158,15 +177,22 @@ def create_face_bp(app):
                 left.save(f'data/{username}_left.jpg')
                 right.save(f'data/{username}_right.jpg')
 
+                code, result = photo_api.update_user(
+                    username,
+                    request.files['front'],
+                    request.files['left'],
+                    request.files['right']
+                )
+
             return res_cors({
-                'code': code,
+                'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
             print(f'\n***FACE Update_users error: {ex}***\n')
             return res_cors({
-                'code': 500,
+                'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
@@ -188,15 +214,17 @@ def create_face_bp(app):
                         if os.path.isfile(f'data/{username}_right.jpg'):
                             os.remove(f'data/{username}_right.jpg')
 
+                code, result = photo_api.remove_user(username)
+
             return res_cors({
-                'code': code,
+                'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
             print(f'\n***FACE Remove_users error: {ex}***\n')
             return res_cors({
-                'code': 500,
+                'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
@@ -210,7 +238,7 @@ def create_face_bp(app):
 
             if 'image' not in request.form:
                 return res_cors({
-                    'code': 400,
+                    'status': 400,
                     'message': 'Missing "image"',
                     'data': ''
                 }), 400
@@ -227,20 +255,25 @@ def create_face_bp(app):
                     continue
 
                 user = moodle_user(username)
+
                 if user:
+                    code, result = photo_api.get_user(username)
+                    if code == 200:
+                        user['avatar'] = result['front']
+
                     users.append({
                         user
                     })
 
             return res_cors({
-                'code': 200,
+                'status': 200,
                 'message': 'Successful',
                 'data': users
             }), 200
         except Exception as ex:
             print(f'\n***FACE Check_user error: {ex}***\n')
             return res_cors({
-                'code': 500,
+                'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500

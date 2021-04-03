@@ -34,8 +34,11 @@ class Model:
         output = x / np.sqrt(np.maximum(np.sum(np.square(x), axis=axis, keepdims=True), epsilon))
         return output
 
+    def __preprocess(self, img):
+        return self.__prewhiten(np.array(img.resize(self.size)))
+
     def get_embed(self, img):
-        data = [self.__prewhiten(img)]
+        data = [self.__preprocess(img)]
         feed_dict = {self.input: data, self.placeholder: False}
 
         embed = self.sess.run(self.output, feed_dict=feed_dict)[0]
