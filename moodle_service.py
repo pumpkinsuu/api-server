@@ -27,12 +27,14 @@ def moodle_res(r):
 
 
 def moodle_user(username):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={USER_INFO}' \
-          f'&username={username}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': USER_INFO,
+        'username': username
+    }
+    r = req.get(url, params=params)
     user = moodle_res(r)
     if user:
         return user[0]
@@ -40,21 +42,25 @@ def moodle_user(username):
 
 
 def moodle_token(token):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={token}' \
-          f'&wsfunction={TOKEN_INFO}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': token,
+        'wsfunction': TOKEN_INFO
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
 def moodle_login(username, password):
-    url = f'{HOST}/login/token.php' \
-          f'?moodlewsrestformat=json' \
-          f'&service=moodle_mobile_app' \
-          f'&username={username}' \
-          f'&password={password}'
-    r = req.post(url)
+    url = f'{HOST}/login/token.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'service': 'moodle_mobile_app',
+        'username': username,
+        'password': password
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
@@ -93,58 +99,68 @@ def verify(args, admin=False):
 
 
 def moodle_checkin(session_id, student_id, status, timein='', timeout=''):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={UPDATE_LOG}' \
-          f'&sessionid={session_id}' \
-          f'&studentid={student_id}' \
-          f'&status={status}' \
-          f'&timein={timein}' \
-          f'&timeout={timeout}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': UPDATE_LOG,
+        'sessionid': session_id,
+        'studentid': student_id,
+        'status': status,
+        'timein': timein,
+        'timeout': timeout
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
 def moodle_room_schedule(room_id, date):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={ROOM_SCHEDULE}' \
-          f'&roomid={room_id}' \
-          f'&date={date}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': ROOM_SCHEDULE,
+        'roomid': room_id,
+        'date': date
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
 def moodle_session(session_id):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={SESSION}' \
-          f'&sessionid={session_id}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': SESSION,
+        'sessionid': session_id
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
 def moodle_log(attendance_id):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={GET_LOG}' \
-          f'&attendanceid={attendance_id}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': GET_LOG,
+        'attendanceid': attendance_id
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
 def moodle_student_log(student_id, session_id):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={GET_STUDENT_LOG}' \
-          f'&studentid={student_id}' \
-          f'&sessionid={session_id}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': GET_STUDENT_LOG,
+        'studentid': student_id,
+        'sessionid': session_id
+    }
+    r = req.get(url, params=params)
     user = moodle_res(r)
     if user:
         return user[0]
@@ -152,20 +168,24 @@ def moodle_student_log(student_id, session_id):
 
 
 def moodle_log_by_course(course_id):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={GET_LOG_BY_COURSE}' \
-          f'&courseid={course_id}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': GET_LOG_BY_COURSE,
+        'courseid': course_id
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
 
 
 def moodle_room_by_campus(campus_id):
-    url = f'{HOST}/webservice/rest/server.php' \
-          f'?moodlewsrestformat=json' \
-          f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={ROOM_BY_CAMPUS}' \
-          f'&campus={campus_id}'
-    r = req.post(url)
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': ROOM_BY_CAMPUS,
+        'campus': campus_id
+    }
+    r = req.get(url, params=params)
     return moodle_res(r)
