@@ -1,7 +1,6 @@
 from face_service.api import FaceAPI
 from photo_service.api import PhotoApi
 from flask import Blueprint, request
-import os
 from moodle_service import *
 
 
@@ -57,9 +56,6 @@ def create_face_bp(app):
                 }
 
                 return res_cors({
-                    """'front': f'data/{username}_front.jpg',
-                    'left': f'data/{username}_left.jpg',
-                    'right': f'data/{username}_right.jpg',"""
                     'status': 200,
                     'message': 'Successful',
                     'data': data
@@ -85,19 +81,19 @@ def create_face_bp(app):
             if v:
                 return v
 
-            if 'front' not in request.files:
+            if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'Missing "front"',
-                    'data': ''
+                    'data': request.form
                 }), 400
-            if 'left' not in request.files:
+            if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'Missing "left"',
                     'data': ''
                 }), 400
-            if 'right' not in request.files:
+            if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'Missing "right"',
@@ -111,22 +107,18 @@ def create_face_bp(app):
                     'data': ''
                 }), 404
 
-            front = load_img(request.files['front'])
-            left = load_img(request.files['left'])
-            right = load_img(request.files['right'])
+            front = load_img(request.form['front'])
+            left = load_img(request.form['left'])
+            right = load_img(request.form['right'])
 
             code, result = face_api.create_user(username, front, left, right)
 
             if code == 201:
-                """front.save(f'data/{username}_front.jpg')
-                left.save(f'data/{username}_left.jpg')
-                right.save(f'data/{username}_right.jpg')"""
-
                 code, result = photo_api.create_user(
                     username,
-                    left=encode_img(left),
-                    right=encode_img(right),
-                    front=encode_img(front)
+                    left=request.form['left'],
+                    right=request.form['right'],
+                    front=request.form['front']
                 )
                 if code != 200:
                     face_api.remove_user(username)
@@ -137,6 +129,9 @@ def create_face_bp(app):
                 'data': ''
             }), code
         except Exception as ex:
+            if face_api.get_user(username):
+                face_api.remove_user(username)
+
             print(f'\n***FACE Insert_users error: {ex}***\n')
             return res_cors({
                 'status': 500,
@@ -151,40 +146,36 @@ def create_face_bp(app):
             if v:
                 return v
 
-            if 'front' not in request.files:
+            if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'Missing "front"',
                     'data': ''
                 }), 400
-            if 'left' not in request.files:
+            if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'Missing "left"',
                     'data': ''
                 }), 400
-            if 'right' not in request.files:
+            if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'Missing "right"',
                     'data': ''
                 }), 400
 
-            front = load_img(request.files['front'])
-            left = load_img(request.files['left'])
-            right = load_img(request.files['right'])
+            front = load_img(request.form['front'])
+            left = load_img(request.form['left'])
+            right = load_img(request.form['right'])
             code, result = face_api.update_user(username, front, left, right)
 
             if code == 200:
-                """front.save(f'data/{username}_front.jpg')
-                left.save(f'data/{username}_left.jpg')
-                right.save(f'data/{username}_right.jpg')"""
-
                 code, result = photo_api.update_user(
                     username,
-                    left=encode_img(left),
-                    right=encode_img(right),
-                    front=encode_img(front)
+                    left=request.form['left'],
+                    right=request.form['right'],
+                    front=request.form['front']
                 )
 
             return res_cors({
@@ -210,13 +201,6 @@ def create_face_bp(app):
             code, result = face_api.remove_user(username)
 
             if code == 200:
-                """if os.path.isfile(f'data/{username}_front.jpg'):
-                    os.remove(f'data/{username}_front.jpg')
-                    if os.path.isfile(f'data/{username}_left.jpg'):
-                        os.remove(f'data/{username}_left.jpg')
-                        if os.path.isfile(f'data/{username}_right.jpg'):
-                            os.remove(f'data/{username}_right.jpg')"""
-
                 code, result = photo_api.remove_user(username)
 
             return res_cors({
@@ -248,7 +232,7 @@ def create_face_bp(app):
 
             users = []
             for image in request.form.getlist('image'):
-                img = load_img_base64(image)
+                img = load_img(image)
 
                 code, username = face_api.verify(img)
                 if code != 200:

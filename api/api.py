@@ -46,6 +46,35 @@ def login():
         }), 500
 
 
+@api_bp.route('/get-reports/<course_id>', methods=['GET'])
+def get_log_by_course(course_id):
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        logs = moodle_log_by_course(course_id)
+        if logs:
+            return res_cors({
+                'status': 200,
+                'message': 'Successful',
+                'data': logs
+            }), 200
+
+        return res_cors({
+            'status': 404,
+            'message': 'Course not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_log_by_course error: {ex}***\n')
+        return res_cors({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
 @api_bp.route('/room-schedules', methods=['GET'])
 def room_schedule():
     try:
@@ -76,11 +105,69 @@ def room_schedule():
 
         return res_cors({
             'status': 404,
-            'message': 'Not found',
+            'message': 'Schedule not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_schedule error: {ex}***\n')
+        return res_cors({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
+@api_bp.route('/rooms/<campus_id>', methods=['GET'])
+def get_rooms(campus_id):
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        log = moodle_room_by_campus(campus_id)
+        if log:
+            return res_cors({
+                'status': 200,
+                'message': 'Successful',
+                'data': log
+            }), 200
+
+        return res_cors({
+            'status': 404,
+            'message': 'Campus not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_rooms error: {ex}***\n')
+        return res_cors({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
+@api_bp.route('/teacher-schedules/<attendance_id>', methods=['GET'])
+def get_log(attendance_id):
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        logs = moodle_log(attendance_id)
+        if logs:
+            return res_cors({
+                'status': 200,
+                'message': 'Successful',
+                'data': logs
+            }), 200
+
+        return res_cors({
+            'status': 404,
+            'message': 'Attendance not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_session error: {ex}***\n')
         return res_cors({
             'status': 500,
             'message': str(ex),
@@ -105,111 +192,11 @@ def get_session(session_id):
 
         return res_cors({
             'status': 404,
-            'message': 'Not found',
+            'message': 'Session not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
-        return res_cors({
-            'status': 500,
-            'message': str(ex),
-            'data': ''
-        }), 500
-
-
-@api_bp.route('/log', methods=['GET'])
-def get_log():
-    try:
-        v = verify(request.args)
-        if v:
-            return v
-
-        if 'studentid' not in request.args:
-            return res_cors({
-                'status': 400,
-                'message': 'Missing "studentid"',
-                'data': ''
-            }), 400
-        if 'sessionid' not in request.args:
-            return res_cors({
-                'status': 400,
-                'message': 'Missing "sessionid"',
-                'data': ''
-            }), 400
-
-        log = moodle_log(request.args['studentid'], request.args['sessionid'])
-        if log:
-            return res_cors({
-                'status': 200,
-                'message': 'Successful',
-                'data': log
-            }), 200
-
-        return res_cors({
-            'status': 404,
-            'message': 'Not found',
-            'data': ''
-        }), 404
-    except Exception as ex:
-        print(f'\n***API Get_session error: {ex}***\n')
-        return res_cors({
-            'status': 500,
-            'message': str(ex),
-            'data': ''
-        }), 500
-
-
-@api_bp.route('/teacher-schedules/<attendance_id>', methods=['GET'])
-def get_logs(attendance_id):
-    try:
-        v = verify(request.args)
-        if v:
-            return v
-
-        logs = moodle_logs(attendance_id)
-        if logs:
-            return res_cors({
-                'status': 200,
-                'message': 'Successful',
-                'data': logs
-            }), 200
-
-        return res_cors({
-            'status': 404,
-            'message': 'Not found',
-            'data': ''
-        }), 404
-    except Exception as ex:
-        print(f'\n***API Get_session error: {ex}***\n')
-        return res_cors({
-            'status': 500,
-            'message': str(ex),
-            'data': ''
-        }), 500
-
-
-@api_bp.route('/students/<username>', methods=['GET'])
-def get_student(username):
-    try:
-        v = verify(request.args)
-        if v:
-            return v
-
-        student = moodle_user(username)
-        if student:
-            return res_cors({
-                'status': 200,
-                'message': 'Successful',
-                'data': student
-            }), 200
-
-        return res_cors({
-            'status': 404,
-            'message': 'Not found',
-            'data': ''
-        }), 404
-    except Exception as ex:
-        print(f'\n***API Get_student error: {ex}***\n')
         return res_cors({
             'status': 500,
             'message': str(ex),
@@ -247,3 +234,73 @@ def manual_check(session_id):
             'data': ''
         }), 500
 
+
+@api_bp.route('/students/<username>', methods=['GET'])
+def get_student(username):
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        student = moodle_user(username)
+        if student:
+            return res_cors({
+                'status': 200,
+                'message': 'Successful',
+                'data': student
+            }), 200
+
+        return res_cors({
+            'status': 404,
+            'message': 'Username not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_student error: {ex}***\n')
+        return res_cors({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
+@api_bp.route('/log', methods=['GET'])
+def get_student_log():
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        if 'studentid' not in request.args:
+            return res_cors({
+                'status': 400,
+                'message': 'Missing "studentid"',
+                'data': ''
+            }), 400
+        if 'sessionid' not in request.args:
+            return res_cors({
+                'status': 400,
+                'message': 'Missing "sessionid"',
+                'data': ''
+            }), 400
+
+        log = moodle_student_log(request.args['studentid'], request.args['sessionid'])
+        if log:
+            return res_cors({
+                'status': 200,
+                'message': 'Successful',
+                'data': log
+            }), 200
+
+        return res_cors({
+            'status': 404,
+            'message': 'Student\'s log not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_session error: {ex}***\n')
+        return res_cors({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500

@@ -6,10 +6,12 @@ HOST = 'http://localhost'
 WSTOKEN = '7e1ed90bd026f2a881d876c711f0ffe9'
 USER_INFO = 'local_webservices_get_roles'
 TOKEN_INFO = 'core_webservice_get_site_info'
-GET_REPORT = 'local_webservices_get_logs_by_id'
-GET_REPORT_STUDENT = 'local_webservices_get_a_log_by_ids'
-POST_REPORT = 'local_webservices_update_log'
+GET_LOG = 'local_webservices_get_logs_by_id'
+GET_STUDENT_LOG = 'local_webservices_get_a_log_by_ids'
+GET_LOG_BY_COURSE = 'local_webservices_get_logs_by_course_id'
+UPDATE_LOG = 'local_webservices_update_log'
 ROOM_SCHEDULE = 'local_webservices_get_schedules'
+ROOM_BY_CAMPUS = 'local_webservices_get_rooms'
 SESSION = 'local_webservices_get_session_detail'
 API_KEY = 'secret_key'
 DEF_ROLE = [1, 3]
@@ -94,7 +96,7 @@ def moodle_checkin(session_id, student_id, status, timein='', timeout=''):
     url = f'{HOST}/webservice/rest/server.php' \
           f'?moodlewsrestformat=json' \
           f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={POST_REPORT}' \
+          f'&wsfunction={UPDATE_LOG}' \
           f'&sessionid={session_id}' \
           f'&studentid={student_id}' \
           f'&status={status}' \
@@ -125,21 +127,21 @@ def moodle_session(session_id):
     return moodle_res(r)
 
 
-def moodle_logs(attendance_id):
+def moodle_log(attendance_id):
     url = f'{HOST}/webservice/rest/server.php' \
           f'?moodlewsrestformat=json' \
           f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={GET_REPORT}' \
+          f'&wsfunction={GET_LOG}' \
           f'&attendanceid={attendance_id}'
     r = req.post(url)
     return moodle_res(r)
 
 
-def moodle_log(student_id, session_id):
+def moodle_student_log(student_id, session_id):
     url = f'{HOST}/webservice/rest/server.php' \
           f'?moodlewsrestformat=json' \
           f'&wstoken={WSTOKEN}' \
-          f'&wsfunction={GET_REPORT_STUDENT}' \
+          f'&wsfunction={GET_STUDENT_LOG}' \
           f'&studentid={student_id}' \
           f'&sessionid={session_id}'
     r = req.post(url)
@@ -147,3 +149,23 @@ def moodle_log(student_id, session_id):
     if user:
         return user[0]
     return {}
+
+
+def moodle_log_by_course(course_id):
+    url = f'{HOST}/webservice/rest/server.php' \
+          f'?moodlewsrestformat=json' \
+          f'&wstoken={WSTOKEN}' \
+          f'&wsfunction={GET_LOG_BY_COURSE}' \
+          f'&courseid={course_id}'
+    r = req.post(url)
+    return moodle_res(r)
+
+
+def moodle_room_by_campus(campus_id):
+    url = f'{HOST}/webservice/rest/server.php' \
+          f'?moodlewsrestformat=json' \
+          f'&wstoken={WSTOKEN}' \
+          f'&wsfunction={ROOM_BY_CAMPUS}' \
+          f'&campus={campus_id}'
+    r = req.post(url)
+    return moodle_res(r)

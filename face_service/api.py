@@ -23,95 +23,113 @@ class FaceAPI:
         self.db = DataBase(app)
 
     def create_user(self, ID, front, left, right):
-        db_ids, db_embeds = self.db.get_users()
+        try:
+            db_ids, db_embeds = self.db.get_users()
 
-        if self.db.get_user(ID):
-            return 409, 'Username already exists'
+            if self.db.get_user(ID):
+                return 409, 'Username already exists'
 
-        front_embed = self.model.get_embed(front)
-        left_embed = self.model.get_embed(left)
-        right_embed = self.model.get_embed(right)
+            front_embed = self.model.get_embed(front)
+            left_embed = self.model.get_embed(left)
+            right_embed = self.model.get_embed(right)
 
-        if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
-            return 400, 'Different faces'
+            if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
+                return 400, 'Different faces'
 
-        embed = mean([front_embed, left_embed, right_embed])
+            embed = mean([front_embed, left_embed, right_embed])
 
-        if len(db_embeds):
-            db_embeds = np.array(db_embeds)
+            if len(db_embeds):
+                db_embeds = np.array(db_embeds)
 
-            idx, dist = find_min(embed, db_embeds)
-            if dist < self.model.tol:
-                return 409, 'Face already exists'
+                idx, dist = find_min(embed, db_embeds)
+                if dist < self.model.tol:
+                    return 409, 'Face already exists'
 
-        if self.db.create({
-            'id': ID,
-            'embed': embed.tolist()
-        }):
-            return 201, 'Successful'
+            if self.db.create({
+                'id': ID,
+                'embed': embed.tolist()
+            }):
+                return 201, 'Successful'
 
-        return 500, 'Internal Server Error'
+            return 500, 'Failed'
+        except Exception as ex:
+            return 500, f'FaceAPI: {str(ex)}'
 
     def update_user(self, ID, front, left, right):
-        db_ids, db_embeds = self.db.get_users()
+        try:
+            db_ids, db_embeds = self.db.get_users()
 
-        if not self.db.get_user(ID):
-            return 404, 'Username not registered'
+            if not self.db.get_user(ID):
+                return 404, 'Username not registered'
 
-        front_embed = self.model.get_embed(front)
-        left_embed = self.model.get_embed(left)
-        right_embed = self.model.get_embed(right)
+            front_embed = self.model.get_embed(front)
+            left_embed = self.model.get_embed(left)
+            right_embed = self.model.get_embed(right)
 
-        if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
-            return 400, 'Different faces'
+            if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
+                return 400, 'Different faces'
 
-        embed = mean([front_embed, left_embed, right_embed])
+            embed = mean([front_embed, left_embed, right_embed])
 
-        if len(db_embeds):
-            db_embeds = np.array(db_embeds)
-            idx, dist = find_min(embed, db_embeds)
-            if dist < self.model.tol and db_ids[idx] != ID:
-                return 409, 'Face already exists'
+            if len(db_embeds):
+                db_embeds = np.array(db_embeds)
+                idx, dist = find_min(embed, db_embeds)
+                if dist < self.model.tol and db_ids[idx] != ID:
+                    return 409, 'Face already exists'
 
-        if self.db.update({
-            'id': ID,
-            'embed': embed.tolist()
-        }):
-            return 200, 'Successful'
+            if self.db.update({
+                'id': ID,
+                'embed': embed.tolist()
+            }):
+                return 200, 'Successful'
 
-        return 500, 'Internal Server Error'
+            return 500, 'Failed'
+        except Exception as ex:
+            return 500, f'FaceAPI: {str(ex)}'
 
     def remove_user(self, ID):
-        if not self.db.get_user(ID):
-            return 404, 'Username not registered'
+        try:
+            if not self.db.get_user(ID):
+                return 404, 'Username not registered'
 
-        if self.db.remove(ID):
-            return 200, 'Successful'
+            if self.db.remove(ID):
+                return 200, 'Successful'
 
-        return 500, 'Internal Server Error'
+            return 500, 'Failed'
+        except Exception as ex:
+            return 500, f'FaceAPI: {str(ex)}'
 
     def verify(self, image):
-        db_ids, db_embeds = self.db.get_users()
-        if not db_ids:
-            return 500, 'Database empty'
+        try:
+            db_ids, db_embeds = self.db.get_users()
+            if not db_ids:
+                return 500, 'Database empty'
 
-        embed = self.model.get_embed(image)
-        idx, dist = find_min(embed, db_embeds)
-        if dist <= self.model.tol:
-            return 200, db_ids[idx]
+            embed = self.model.get_embed(image)
+            idx, dist = find_min(embed, db_embeds)
+            if dist <= self.model.tol:
+                return 200, db_ids[idx]
 
-        return 404, 0
+            return 404, 0
+        except Exception as ex:
+            return 500, f'FaceAPI: {str(ex)}'
 
     def get_user(self, ID):
-        user = self.db.get_user(ID)
-        if user:
-            return 200, 'Exist'
+        try:
+            user = self.db.get_user(ID)
+            if user:
+                return 200, 'Exist'
 
-        return 404, 'Username not found'
+            return 404, 'Username not found'
+        except Exception as ex:
+            return 500, f'FaceAPI: {str(ex)}'
 
     def get_users(self):
-        ids, _ = self.db.get_users()
-        if len(ids) != 0:
-            return 200, ids
+        try:
+            ids, _ = self.db.get_users()
+            if len(ids) != 0:
+                return 200, ids
 
-        return 500, 'Database empty'
+            return 500, 'Database empty'
+        except Exception as ex:
+            return 500, f'FaceAPI: {str(ex)}'
