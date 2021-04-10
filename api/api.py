@@ -117,14 +117,21 @@ def room_schedule():
         }), 500
 
 
-@api_bp.route('/rooms/<campus_id>', methods=['GET'])
-def get_rooms(campus_id):
+@api_bp.route('/rooms', methods=['GET'])
+def get_rooms():
     try:
         v = verify(request.args)
         if v:
             return v
 
-        log = moodle_room_by_campus(campus_id)
+        if 'campus' not in request.args:
+            return res_cors({
+                'status': 400,
+                'message': 'missing "campus"',
+                'data': ''
+            }), 400
+
+        log = moodle_room_by_campus(request.args['campus'])
         if log:
             return res_cors({
                 'status': 200,
