@@ -3,3 +3,4 @@ flask
 flask_ngrok
 pymongo
 pymongo[srv]
+tensorflow-cpu

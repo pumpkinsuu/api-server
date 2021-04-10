@@ -1,5 +1,3 @@
-from face_service.model import Model as Dlib
-from face_service.facenet_model import Model as Facenet
 from face_service.database import DataBase
 import numpy as np
 
@@ -21,9 +19,11 @@ def find_min(x, arr):
 class FaceAPI:
     def __init__(self, app, model=1):
         if model == 1:
-            self.model = Dlib()
+            from face_service.model import Model
+            self.model = Model()
         else:
-            self.model = Facenet()
+            from face_service.facenet_model import Model
+            self.model = Model()
 
         self.db = DataBase(app)
 
