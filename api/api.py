@@ -11,13 +11,13 @@ def login():
         if 'username' not in request.form:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "username"',
+                'message': 'missing "username"',
                 'data': ''
             }), 400
         if 'password' not in request.form:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "password"',
+                'message': 'missing "password"',
                 'data': ''
             }), 400
 
@@ -28,13 +28,13 @@ def login():
 
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': user
             }), 200
 
         return res_cors({
             'status': 401,
-            'message': 'Wrong username or password',
+            'message': 'wrong username or password',
             'data': ''
         }), 401
     except Exception as ex:
@@ -57,13 +57,13 @@ def get_log_by_course(course_id):
         if logs:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': logs
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Course not found',
+            'message': 'course not found',
             'data': ''
         }), 404
     except Exception as ex:
@@ -81,13 +81,13 @@ def room_schedule():
         if 'roomid' not in request.args:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "roomid"',
+                'message': 'missing "roomid"',
                 'data': ''
             }), 400
         if 'date' not in request.args:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "date"',
+                'message': 'missing "date"',
                 'data': ''
             }), 400
 
@@ -99,13 +99,13 @@ def room_schedule():
         if schedule:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': schedule
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Schedule not found',
+            'message': 'schedule not found',
             'data': ''
         }), 404
     except Exception as ex:
@@ -128,13 +128,13 @@ def get_rooms(campus_id):
         if log:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': log
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Campus not found',
+            'message': 'campus not found',
             'data': ''
         }), 404
     except Exception as ex:
@@ -157,13 +157,13 @@ def get_log(attendance_id):
         if logs:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': logs
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Attendance not found',
+            'message': 'attendance not found',
             'data': ''
         }), 404
     except Exception as ex:
@@ -186,13 +186,13 @@ def get_session(session_id):
         if session:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': session
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Session not found',
+            'message': 'session not found',
             'data': ''
         }), 404
     except Exception as ex:
@@ -214,7 +214,7 @@ def manual_check(session_id):
         if 'students' not in request.json:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "students"',
+                'message': 'missing "students"',
                 'data': ''
             }), 400
 
@@ -223,7 +223,7 @@ def manual_check(session_id):
 
         return res_cors({
             'status': 200,
-            'message': 'Successful',
+            'message': 'success',
             'data': ''
         }), 200
     except Exception as ex:
@@ -246,13 +246,13 @@ def get_student(username):
         if student:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': student
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Username not found',
+            'message': 'username not found',
             'data': ''
         }), 404
     except Exception as ex:
@@ -274,13 +274,13 @@ def get_student_log():
         if 'studentid' not in request.args:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "studentid"',
+                'message': 'missing "studentid"',
                 'data': ''
             }), 400
         if 'sessionid' not in request.args:
             return res_cors({
                 'status': 400,
-                'message': 'Missing "sessionid"',
+                'message': 'missing "sessionid"',
                 'data': ''
             }), 400
 
@@ -288,13 +288,13 @@ def get_student_log():
         if log:
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': log
             }), 200
 
         return res_cors({
             'status': 404,
-            'message': 'Student\'s log not found',
+            'message': 'student\'s log not found',
             'data': ''
         }), 404
     except Exception as ex:

@@ -70,7 +70,7 @@ def verify(args, admin=False):
     if 'token' not in args:
         return res_cors({
             'status': 400,
-            'message': 'Missing token',
+            'message': 'missing token',
             'data': ''
         }), 400
 
@@ -85,7 +85,7 @@ def verify(args, admin=False):
     if not result:
         return res_cors({
             'status': 401,
-            'message': 'Unauthorized request',
+            'message': 'unauthorized request',
             'data': ''
         }), 401
 
@@ -93,7 +93,7 @@ def verify(args, admin=False):
     if not user or user['roleid'] not in role:
         return res_cors({
             'status': 401,
-            'message': 'No permission',
+            'message': 'no permission',
             'data': ''
         }), 401
 

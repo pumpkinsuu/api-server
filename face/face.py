@@ -21,7 +21,7 @@ def create_face_bp(app, model):
             if code == 200:
                 return res_cors({
                     'status': code,
-                    'message': 'Successful',
+                    'message': 'success',
                     'data': result
                 }), code
 
@@ -57,7 +57,7 @@ def create_face_bp(app, model):
 
                 return res_cors({
                     'status': 200,
-                    'message': 'Successful',
+                    'message': 'success',
                     'data': data
                 }), 200
 
@@ -84,26 +84,26 @@ def create_face_bp(app, model):
             if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "front"',
+                    'message': 'missing "front"',
                     'data': request.form
                 }), 400
             if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "left"',
+                    'message': 'missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "right"',
+                    'message': 'missing "right"',
                     'data': ''
                 }), 400
 
             if not moodle_user(username):
                 return res_cors({
                     'status': 404,
-                    'message': 'Username not found',
+                    'message': 'username not found',
                     'data': ''
                 }), 404
 
@@ -163,19 +163,19 @@ def create_face_bp(app, model):
             if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "front"',
+                    'message': 'missing "front"',
                     'data': ''
                 }), 400
             if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "left"',
+                    'message': 'missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "right"',
+                    'message': 'missing "right"',
                     'data': ''
                 }), 400
 
@@ -247,7 +247,7 @@ def create_face_bp(app, model):
             if 'image' not in request.form:
                 return res_cors({
                     'status': 400,
-                    'message': 'Missing "image"',
+                    'message': 'missing "image"',
                     'data': ''
                 }), 400
 
@@ -256,7 +256,7 @@ def create_face_bp(app, model):
                 img = load_img(image)
 
                 code, username = face_api.verify(img)
-                print(username)
+
                 if code != 200:
                     continue
 
@@ -274,7 +274,7 @@ def create_face_bp(app, model):
 
             return res_cors({
                 'status': 200,
-                'message': 'Successful',
+                'message': 'success',
                 'data': users
             }), 200
         except Exception as ex:
@@ -286,14 +286,14 @@ def create_face_bp(app, model):
             }), 500
 
     @face_bp.route('/verify', methods=['POST'])
-    def verify():
+    def face_verify():
         try:
             img = request.form['image']
             img = load_img(img)
             code, result = face_api.verify(img)
             return res_cors({
                 'status': code,
-                'message': 'Successful',
+                'message': 'success',
                 'data': result
             }), code
         except Exception as ex:

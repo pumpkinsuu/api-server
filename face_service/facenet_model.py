@@ -32,4 +32,3 @@ class Model:
         embed = l2_normalize(embed)
 
         return embed
-

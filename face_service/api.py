@@ -32,7 +32,7 @@ class FaceAPI:
             db_ids, db_embeds = self.db.get_users()
 
             if self.db.get_user(ID):
-                return 409, 'Username already exists'
+                return 409, 'username already exists'
 
             front_embed = self.model.get_embed(front)
             left_embed = self.model.get_embed(left)
@@ -42,7 +42,7 @@ class FaceAPI:
             fr = distance(front_embed, right_embed)
 
             if fl > self.model.tol or fr > self.model.tol:
-                return 400, f'Different faces: {fl}, {fr}'
+                return 400, f'different faces: {fl}, {fr}'
 
             embed = mean([front_embed, left_embed, right_embed])
 
@@ -51,31 +51,32 @@ class FaceAPI:
 
                 idx, dist = find_min(embed, db_embeds)
                 if dist < self.model.tol:
-                    return 409, 'Face already exists'
+                    return 409, 'face already exists'
 
             if self.db.create({
                 'id': ID,
                 'embed': embed.tolist()
             }):
-                return 201, 'Successful'
+                return 201, 'success'
 
-            return 500, 'Failed'
+            return 500, 'failed to create'
         except Exception as ex:
-            return 500, f'FaceAPI: {str(ex)}'
+            print(f'\n***FaceAPI Create_user error: {ex}***\n')
+            return 500, str(ex)
 
     def update_user(self, ID, front, left, right):
         try:
             db_ids, db_embeds = self.db.get_users()
 
             if not self.db.get_user(ID):
-                return 404, 'Username not registered'
+                return 404, 'username not registered'
 
             front_embed = self.model.get_embed(front)
             left_embed = self.model.get_embed(left)
             right_embed = self.model.get_embed(right)
 
             if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
-                return 400, 'Different faces'
+                return 400, 'different faces'
 
             embed = mean([front_embed, left_embed, right_embed])
 
@@ -83,35 +84,37 @@ class FaceAPI:
                 db_embeds = np.array(db_embeds)
                 idx, dist = find_min(embed, db_embeds)
                 if dist < self.model.tol and db_ids[idx] != ID:
-                    return 409, 'Face already exists'
+                    return 409, 'face already exists'
 
             if self.db.update({
                 'id': ID,
                 'embed': embed.tolist()
             }):
-                return 200, 'Successful'
+                return 200, 'success'
 
-            return 500, 'Failed'
+            return 500, 'failed to update'
         except Exception as ex:
-            return 500, f'FaceAPI: {str(ex)}'
+            print(f'\n***FaceAPI Update_user error: {ex}***\n')
+            return 500, str(ex)
 
     def remove_user(self, ID):
         try:
             if not self.db.get_user(ID):
-                return 404, 'Username not registered'
+                return 404, 'username not registered'
 
             if self.db.remove(ID):
-                return 200, 'Successful'
+                return 200, 'successful'
 
-            return 500, 'Failed'
+            return 500, 'failed to remove'
         except Exception as ex:
-            return 500, f'FaceAPI: {str(ex)}'
+            print(f'\n***FaceAPI Remove_user error: {ex}***\n')
+            return 500, str(ex)
 
     def verify(self, image):
         try:
             db_ids, db_embeds = self.db.get_users()
             if not db_ids:
-                return 500, 'Database empty'
+                return 500, 'database empty'
 
             embed = self.model.get_embed(image)
             idx, dist = find_min(embed, db_embeds)
@@ -120,17 +123,19 @@ class FaceAPI:
 
             return 404, 0
         except Exception as ex:
-            return 500, f'FaceAPI: {str(ex)}'
+            print(f'\n***FaceAPI verify_user error: {ex}***\n')
+            return 500, str(ex)
 
     def get_user(self, ID):
         try:
             user = self.db.get_user(ID)
             if user:
-                return 200, 'Exist'
+                return 200, 'exist'
 
-            return 404, 'Username not found'
+            return 404, 'username not found'
         except Exception as ex:
-            return 500, f'FaceAPI: {str(ex)}'
+            print(f'\n***FaceAPI Get_user error: {ex}***\n')
+            return 500, str(ex)
 
     def get_users(self):
         try:
@@ -138,6 +143,7 @@ class FaceAPI:
             if len(ids) != 0:
                 return 200, ids
 
-            return 500, 'Database empty'
+            return 500, 'database empty'
         except Exception as ex:
-            return 500, f'FaceAPI: {str(ex)}'
+            print(f'\n***FaceAPI Get_users error: {ex}***\n')
+            return 500, str(ex)
