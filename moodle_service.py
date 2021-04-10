@@ -3,7 +3,7 @@ from utilities import *
 
 
 HOST = 'http://localhost'
-WSTOKEN = '7e1ed90bd026f2a881d876c711f0ffe9'
+WSTOKEN = '56e75b2279ae442cc8a38aa3eb59f3a8'
 USER_INFO = 'local_webservices_get_roles'
 TOKEN_INFO = 'core_webservice_get_site_info'
 GET_LOG = 'local_webservices_get_logs_by_id'
@@ -21,7 +21,9 @@ ADMIN_ROLE = [1]
 def moodle_res(r):
     if r.status_code == 200:
         result = r.json()
-        if result and 'errorcode' not in result:
+        if result:
+            if 'errorcode' in result and result['errorcode']:
+                return {}
             return result
     return {}
 
@@ -98,7 +100,8 @@ def verify(args, admin=False):
     return ''
 
 
-def moodle_checkin(session_id, student_id, status, timein='', timeout=''):
+def moodle_checkin(session_id, student_id, status, timein=0, timeout=0):
+    student_id = moodle_user(student_id)['id']
     url = f'{HOST}/webservice/rest/server.php'
     params = {
         'moodlewsrestformat': 'json',
@@ -106,8 +109,8 @@ def moodle_checkin(session_id, student_id, status, timein='', timeout=''):
         'wsfunction': UPDATE_LOG,
         'sessionid': session_id,
         'studentid': student_id,
-        'status': status,
-        'timein': timein,
+        'statusid': status,
+        'timein': time_now(),
         'timeout': timeout
     }
     r = req.get(url, params=params)

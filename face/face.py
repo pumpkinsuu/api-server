@@ -4,8 +4,8 @@ from flask import Blueprint, request
 from moodle_service import *
 
 
-def create_face_bp(app):
-    face_api = FaceAPI(app)
+def create_face_bp(app, model):
+    face_api = FaceAPI(app, model)
     photo_api = PhotoApi(app)
     face_bp = Blueprint('face_bp', __name__)
 
@@ -111,17 +111,30 @@ def create_face_bp(app):
             left = load_img(request.form['left'])
             right = load_img(request.form['right'])
 
-            code, result = face_api.create_user(username, front, left, right)
+            code, result = face_api.get_user(username)
 
-            if code == 201:
-                code, result = photo_api.create_user(
-                    username,
-                    left=request.form['left'],
-                    right=request.form['right'],
-                    front=request.form['front']
-                )
-                if code != 200:
-                    face_api.remove_user(username)
+            if code != 200:
+                print('ok')
+                code, result = face_api.create_user(username, front, left, right)
+                if code == 201:
+                    code, result = photo_api.create_user(
+                        username,
+                        left=request.form['left'],
+                        right=request.form['right'],
+                        front=request.form['front']
+                    )
+                    if code != 201:
+                        face_api.remove_user(username)
+
+            else:
+                code, result = face_api.update_user(username, front, left, right)
+                if code == 200:
+                    code, result = photo_api.update_user(
+                        username,
+                        left=request.form['left'],
+                        right=request.form['right'],
+                        front=request.form['front']
+                    )
 
             return res_cors({
                 'status': code,
@@ -129,8 +142,9 @@ def create_face_bp(app):
                 'data': ''
             }), code
         except Exception as ex:
-            if face_api.get_user(username):
+            if not face_api.get_user(username) or not photo_api.get_user(username):
                 face_api.remove_user(username)
+                photo_api.remove_user(username)
 
             print(f'\n***FACE Insert_users error: {ex}***\n')
             return res_cors({
@@ -223,6 +237,13 @@ def create_face_bp(app):
             if v:
                 return v
 
+            if not moodle_session(session_id):
+                return res_cors({
+                    'status': 400,
+                    'message': 'Session ID not exist',
+                    'data': ''
+                }), 400
+
             if 'image' not in request.form:
                 return res_cors({
                     'status': 400,
@@ -235,6 +256,7 @@ def create_face_bp(app):
                 img = load_img(image)
 
                 code, username = face_api.verify(img)
+                print(username)
                 if code != 200:
                     continue
 
@@ -255,6 +277,25 @@ def create_face_bp(app):
                 'message': 'Successful',
                 'data': users
             }), 200
+        except Exception as ex:
+            print(f'\n***FACE Check_user error: {ex}***\n')
+            return res_cors({
+                'status': 500,
+                'message': str(ex),
+                'data': ''
+            }), 500
+
+    @face_bp.route('/verify', methods=['POST'])
+    def verify():
+        try:
+            img = request.form['image']
+            img = load_img(img)
+            code, result = face_api.verify(img)
+            return res_cors({
+                'status': code,
+                'message': 'Successful',
+                'data': result
+            }), code
         except Exception as ex:
             print(f'\n***FACE Check_user error: {ex}***\n')
             return res_cors({

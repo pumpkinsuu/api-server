@@ -1,4 +1,5 @@
-from face_service.model import Model
+from face_service.model import Model as Dlib
+from face_service.facenet_model import Model as Facenet
 from face_service.database import DataBase
 import numpy as np
 
@@ -18,8 +19,12 @@ def find_min(x, arr):
 
 
 class FaceAPI:
-    def __init__(self, app):
-        self.model = Model()
+    def __init__(self, app, model=1):
+        if model == 1:
+            self.model = Dlib()
+        else:
+            self.model = Facenet()
+
         self.db = DataBase(app)
 
     def create_user(self, ID, front, left, right):
@@ -33,8 +38,11 @@ class FaceAPI:
             left_embed = self.model.get_embed(left)
             right_embed = self.model.get_embed(right)
 
-            if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
-                return 400, 'Different faces'
+            fl = distance(front_embed, left_embed)
+            fr = distance(front_embed, right_embed)
+
+            if fl > self.model.tol or fr > self.model.tol:
+                return 400, f'Different faces: {fl}, {fr}'
 
             embed = mean([front_embed, left_embed, right_embed])
 
