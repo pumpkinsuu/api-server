@@ -14,7 +14,7 @@ ROOM_SCHEDULE = 'local_webservices_get_schedules'
 ROOM_BY_CAMPUS = 'local_webservices_get_rooms'
 SESSION = 'local_webservices_get_session_detail'
 API_KEY = 'secret_key'
-DEF_ROLE = [1, 3]
+DEF_ROLE = [1, 2, 3, 4]
 ADMIN_ROLE = [1]
 
 
