@@ -8,22 +8,22 @@ api_bp = Blueprint('api_bp', __name__)
 @api_bp.route('/login', methods=['POST'])
 def login():
     try:
-        if 'username' not in request.form:
+        if 'username' not in request.json:
             return res_cors({
                 'status': 400,
                 'message': 'missing "username"',
                 'data': ''
             }), 400
-        if 'password' not in request.form:
+        if 'password' not in request.json:
             return res_cors({
                 'status': 400,
                 'message': 'missing "password"',
                 'data': ''
             }), 400
 
-        result = moodle_login(request.form['username'], request.form['password'])
+        result = moodle_login(request.json['username'], request.json['password'])
         if result:
-            user = moodle_user(request.form['username'])
+            user = moodle_user(request.json['username'])
             user['token'] = result['token']
 
             return res_cors({

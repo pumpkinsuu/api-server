@@ -1,6 +1,9 @@
 face_recognition
-flask
+flask~=1.1.2
 flask_ngrok
-pymongo
+pymongo~=3.11.2
 pymongo[srv]
 tensorflow-cpu
+numpy~=1.18.5
+pillow~=8.0.1
+requests~=2.24.0
