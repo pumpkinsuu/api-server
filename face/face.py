@@ -81,19 +81,19 @@ def create_face_bp(app, model):
             if v:
                 return v
 
-            if 'front' not in request.json:
+            if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "front"',
-                    'data': request.json
+                    'data': request.form
                 }), 400
-            if 'left' not in request.json:
+            if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "left"',
                     'data': ''
                 }), 400
-            if 'right' not in request.json:
+            if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "right"',
@@ -107,9 +107,9 @@ def create_face_bp(app, model):
                     'data': ''
                 }), 404
 
-            front = load_img(request.json['front'])
-            left = load_img(request.json['left'])
-            right = load_img(request.json['right'])
+            front = load_img(request.form['front'])
+            left = load_img(request.form['left'])
+            right = load_img(request.form['right'])
 
             code, result = face_api.get_user(username)
 
@@ -119,9 +119,9 @@ def create_face_bp(app, model):
                 if code == 201:
                     code, result = photo_api.create_user(
                         username,
-                        left=request.json['left'],
-                        right=request.json['right'],
-                        front=request.json['front']
+                        left=request.form['left'],
+                        right=request.form['right'],
+                        front=request.form['front']
                     )
                     if code != 201:
                         face_api.remove_user(username)
@@ -131,9 +131,9 @@ def create_face_bp(app, model):
                 if code == 200:
                     code, result = photo_api.update_user(
                         username,
-                        left=request.json['left'],
-                        right=request.json['right'],
-                        front=request.json['front']
+                        left=request.form['left'],
+                        right=request.form['right'],
+                        front=request.form['front']
                     )
 
             return res_cors({

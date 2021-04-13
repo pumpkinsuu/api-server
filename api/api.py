@@ -153,14 +153,16 @@ def get_rooms():
         }), 500
 
 
-@api_bp.route('/teacher-schedules/<attendance_id>', methods=['GET'])
-def get_log(attendance_id):
+@api_bp.route('/teacher-schedules', methods=['GET'])
+def get_log():
     try:
         v = verify(request.args)
         if v:
             return v
 
-        logs = moodle_log(attendance_id)
+        user = moodle_token(request.args['token'])
+
+        logs = moodle_get_course(request.args['token'], user['userid'])
         if logs:
             return res_cors({
                 'status': 200,

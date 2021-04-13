@@ -13,6 +13,7 @@ UPDATE_LOG = 'local_webservices_update_log'
 ROOM_SCHEDULE = 'local_webservices_get_schedules'
 ROOM_BY_CAMPUS = 'local_webservices_get_rooms'
 SESSION = 'local_webservices_get_session_detail'
+GET_COURSE = 'core_enrol_get_users_courses'
 API_KEY = 'secret_key'
 DEF_ROLE = [1, 2, 3, 4]
 ADMIN_ROLE = [1]
@@ -189,6 +190,18 @@ def moodle_room_by_campus(campus_id):
         'wstoken': WSTOKEN,
         'wsfunction': ROOM_BY_CAMPUS,
         'campus': campus_id
+    }
+    r = req.get(url, params=params)
+    return moodle_res(r)
+
+
+def moodle_get_course(token, user_id):
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': token,
+        'wsfunction': GET_COURSE,
+        'userid': user_id
     }
     r = req.get(url, params=params)
     return moodle_res(r)
