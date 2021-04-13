@@ -19,10 +19,10 @@ def find_min(x, arr):
 class FaceAPI:
     def __init__(self, app, model=1):
         if model == 1:
-            from face_service.model import Model
+            from face_service.facenet_model import Model
             self.model = Model()
         else:
-            from face_service.facenet_model import Model
+            from face_service.model import Model
             self.model = Model()
 
         self.db = DataBase(app)

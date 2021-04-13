@@ -41,6 +41,6 @@ if __name__ == '__main__':
     parse.add_argument('--remote', type=int, default=0)
     parse.add_argument('--debug', type=int, default=0)
     parse.add_argument('--model', type=int, default=1
-                       , help='1: dlib, 2: facenet')
+                       , help='1: facenet, 2: dlib')
     args = parse.parse_args()
     main(args)
