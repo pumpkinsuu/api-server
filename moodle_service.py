@@ -115,7 +115,7 @@ def moodle_checkin(session_id, student_id, status, timein=0, timeout=0):
         'timeout': timeout
     }
     r = req.get(url, params=params)
-    return moodle_res(r)
+    return bool(moodle_res(r))
 
 
 def moodle_room_schedule(room_id, date):

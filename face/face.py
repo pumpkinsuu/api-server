@@ -81,19 +81,19 @@ def create_face_bp(app, model):
             if v:
                 return v
 
-            if 'front' not in request.json:
+            if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "front"',
-                    'data': request.json
+                    'data': ''
                 }), 400
-            if 'left' not in request.json:
+            if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "left"',
                     'data': ''
                 }), 400
-            if 'right' not in request.json:
+            if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "right"',
@@ -107,21 +107,20 @@ def create_face_bp(app, model):
                     'data': ''
                 }), 404
 
-            front = load_img(request.json['front'])
-            left = load_img(request.json['left'])
-            right = load_img(request.json['right'])
+            front = load_img(request.form['front'])
+            left = load_img(request.form['left'])
+            right = load_img(request.form['right'])
 
             code, result = face_api.get_user(username)
 
             if code != 200:
-                print('ok')
                 code, result = face_api.create_user(username, front, left, right)
                 if code == 201:
                     code, result = photo_api.create_user(
                         username,
-                        left=request.json['left'],
-                        right=request.json['right'],
-                        front=request.json['front']
+                        left=request.form['left'],
+                        right=request.form['right'],
+                        front=request.form['front']
                     )
                     if code != 201:
                         face_api.remove_user(username)
@@ -131,9 +130,9 @@ def create_face_bp(app, model):
                 if code == 200:
                     code, result = photo_api.update_user(
                         username,
-                        left=request.json['left'],
-                        right=request.json['right'],
-                        front=request.json['front']
+                        left=request.form['left'],
+                        right=request.form['right'],
+                        front=request.form['front']
                     )
 
             return res_cors({
@@ -160,36 +159,36 @@ def create_face_bp(app, model):
             if v:
                 return v
 
-            if 'front' not in request.json:
+            if 'front' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "front"',
                     'data': ''
                 }), 400
-            if 'left' not in request.json:
+            if 'left' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "left"',
                     'data': ''
                 }), 400
-            if 'right' not in request.json:
+            if 'right' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "right"',
                     'data': ''
                 }), 400
 
-            front = load_img(request.json['front'])
-            left = load_img(request.json['left'])
-            right = load_img(request.json['right'])
+            front = load_img(request.form['front'])
+            left = load_img(request.form['left'])
+            right = load_img(request.form['right'])
             code, result = face_api.update_user(username, front, left, right)
 
             if code == 200:
                 code, result = photo_api.update_user(
                     username,
-                    left=request.json['left'],
-                    right=request.json['right'],
-                    front=request.json['front']
+                    left=request.form['left'],
+                    right=request.form['right'],
+                    front=request.form['front']
                 )
 
             return res_cors({
@@ -247,7 +246,7 @@ def create_face_bp(app, model):
             if 'images' not in request.json:
                 return res_cors({
                     'status': 400,
-                    'message': 'missing "image"',
+                    'message': 'missing "images"',
                     'data': ''
                 }), 400
 
@@ -258,14 +257,16 @@ def create_face_bp(app, model):
                 code, username = face_api.verify(img)
 
                 if code != 200:
-                    continue
-
-                if not moodle_checkin(session_id, username, 1):
+                    users.append({'status': 0})
                     continue
 
                 user = moodle_user(username)
-
                 if user:
+                    if moodle_checkin(session_id, username, 1):
+                        user['status'] = 1
+                    else:
+                        user['status'] = 2
+
                     code, result = photo_api.get_user(username)
                     if code == 200:
                         user['avatar'] = result['front']
