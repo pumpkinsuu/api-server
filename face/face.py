@@ -243,7 +243,7 @@ def create_face_bp(app, model):
                     'data': ''
                 }), 400
 
-            if 'images' not in request.json:
+            if 'images' not in request.form:
                 return res_cors({
                     'status': 400,
                     'message': 'missing "images"',
@@ -251,7 +251,7 @@ def create_face_bp(app, model):
                 }), 400
 
             users = []
-            for image in request.json['images']:
+            for image in request.form.getlist('images'):
                 img = load_img(image)
 
                 code, username = face_api.verify(img)
@@ -289,7 +289,7 @@ def create_face_bp(app, model):
     @face_bp.route('/verify', methods=['POST'])
     def face_verify():
         try:
-            img = request.json['image']
+            img = request.form['image']
             img = load_img(img)
             code, result = face_api.verify(img)
             return res_cors({
