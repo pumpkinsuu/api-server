@@ -1,229 +1,250 @@
+from flask import Blueprint, request, jsonify
+
 from face_service.api import FaceAPI
-from photo_service.api import PhotoApi
-from flask import Blueprint, request
+from photo_service.api import PhotoAPI
 from moodle_service import *
 
 
-def create_face_bp(app, model):
-    face_api = FaceAPI(app, model)
-    photo_api = PhotoApi(app)
+def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
     face_bp = Blueprint('face_bp', __name__)
 
-    @face_bp.route('/', methods=['GET'])
-    def get_users():
+    @face_bp.route('/<collection>', methods=['GET'])
+    def get_users(collection):
         try:
             v = verify(request.args)
             if v:
                 return v
 
-            code, result = face_api.get_users()
+            code, result = face_api.get_users(collection)
 
             if code == 200:
-                return res_cors({
+                return jsonify({
                     'status': code,
                     'message': 'success',
                     'data': result
                 }), code
 
-            return res_cors({
+            return jsonify({
                 'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
             print(f'\n***FACE Get_users error: {ex}***\n')
-            return res_cors({
+            return jsonify({
                 'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<username>', methods=['GET'])
-    def get_user(username):
+    @face_bp.route('/<collection>', methods=['POST'])
+    def rename_collection(collection):
         try:
             v = verify(request.args)
             if v:
                 return v
 
-            code, result = face_api.get_user(username)
+            if 'name' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "name"',
+                    'data': ''
+                }), 400
+            code, result = face_api.rename_collection(
+                collection,
+                request.form['name']
+            )
+            if code == 200:
+                return jsonify({
+                    'status': code,
+                    'message': 'success',
+                    'data': result
+                }), code
+            return jsonify({
+                'status': code,
+                'message': result,
+                'data': ''
+            }), code
+        except Exception as ex:
+            print(f'\n***FACE Rename_collection error: {ex}***\n')
+            return jsonify({
+                'status': 500,
+                'message': str(ex),
+                'data': ''
+            }), 500
+
+    @face_bp.route('/<collection>', methods=['DELETE'])
+    def drop_collection(collection):
+        try:
+            v = verify(request.args)
+            if v:
+                return v
+
+            code, result = face_api.drop_collection(collection)
+            if code == 200:
+                return jsonify({
+                    'status': code,
+                    'message': 'success',
+                    'data': result
+                }), code
+            return jsonify({
+                'status': code,
+                'message': result,
+                'data': ''
+            }), code
+        except Exception as ex:
+            print(f'\n***FACE Drop_collection error: {ex}***\n')
+            return jsonify({
+                'status': 500,
+                'message': str(ex),
+                'data': ''
+            }), 500
+
+    @face_bp.route('/<collection>/<username>', methods=['GET'])
+    def get_user(collection, username):
+        try:
+            v = verify(request.args)
+            if v:
+                return v
+
+            code, result = face_api.get_user(collection, username)
 
             if code == 200:
-                code, result = photo_api.get_user(username)
+                code, result = photo_api.get_user(collection, username)
                 data = {
                     'left': result['left'],
                     'right': result['right'],
                     'front': result['front']
                 }
 
-                return res_cors({
+                return jsonify({
                     'status': 200,
                     'message': 'success',
                     'data': data
                 }), 200
 
-            return res_cors({
+            return jsonify({
                 'status': 404,
                 'message': result,
                 'data': ''
             }), 404
         except Exception as ex:
             print(f'\n***FACE Get_user error: {ex}***\n')
-            return res_cors({
+            return jsonify({
                 'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<username>', methods=['POST'])
-    def insert(username):
+    @face_bp.route('/<collection>/<username>', methods=['POST', 'PUT'])
+    def update_user(collection, username):
         try:
             v = verify(request.args, admin=True)
             if v:
                 return v
 
             if 'front' not in request.form:
-                return res_cors({
+                return jsonify({
                     'status': 400,
                     'message': 'missing "front"',
                     'data': ''
                 }), 400
             if 'left' not in request.form:
-                return res_cors({
+                return jsonify({
                     'status': 400,
                     'message': 'missing "left"',
                     'data': ''
                 }), 400
             if 'right' not in request.form:
-                return res_cors({
+                return jsonify({
                     'status': 400,
                     'message': 'missing "right"',
                     'data': ''
                 }), 400
 
             if not moodle_user(username):
-                return res_cors({
+                return jsonify({
                     'status': 404,
                     'message': 'username not found',
                     'data': ''
                 }), 404
 
-            front = load_img(request.form['front'])
-            left = load_img(request.form['left'])
-            right = load_img(request.form['right'])
-
-            code, result = face_api.get_user(username)
+            code, result = face_api.get_user(collection, username)
 
             if code != 200:
-                code, result = face_api.create_user(username, front, left, right)
+                code, result = face_api.create_user(
+                    collection,
+                    username,
+                    front=request.form['front'],
+                    left=request.form['left'],
+                    right=request.form['right']
+                )
                 if code == 201:
                     code, result = photo_api.create_user(
+                        collection,
                         username,
+                        front=request.form['front'],
                         left=request.form['left'],
-                        right=request.form['right'],
-                        front=request.form['front']
+                        right=request.form['right']
                     )
                     if code != 201:
-                        face_api.remove_user(username)
+                        face_api.remove_user(collection, username)
 
             else:
-                code, result = face_api.update_user(username, front, left, right)
+                code, result = face_api.update_user(
+                    collection,
+                    username,
+                    front=request.form['front'],
+                    left=request.form['left'],
+                    right=request.form['right']
+                )
                 if code == 200:
                     code, result = photo_api.update_user(
+                        collection,
                         username,
+                        front=request.form['front'],
                         left=request.form['left'],
-                        right=request.form['right'],
-                        front=request.form['front']
+                        right=request.form['right']
                     )
 
-            return res_cors({
+            return jsonify({
                 'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
-            if not face_api.get_user(username) or not photo_api.get_user(username):
-                face_api.remove_user(username)
-                photo_api.remove_user(username)
+            if not face_api.get_user(collection, username) \
+                    or not photo_api.get_user(collection, username):
+                face_api.remove_user(collection, username)
+                photo_api.remove_user(collection, username)
 
             print(f'\n***FACE Insert_users error: {ex}***\n')
-            return res_cors({
+            return jsonify({
                 'status': 500,
                 'message': str(ex),
                 'data': ''
             }), 500
 
-    @face_bp.route('/<username>', methods=['PUT'])
-    def update(username):
+    @face_bp.route('/<collection>/<username>', methods=['DELETE'])
+    def remove(collection, username):
         try:
             v = verify(request.args, admin=True)
             if v:
                 return v
 
-            if 'front' not in request.form:
-                return res_cors({
-                    'status': 400,
-                    'message': 'missing "front"',
-                    'data': ''
-                }), 400
-            if 'left' not in request.form:
-                return res_cors({
-                    'status': 400,
-                    'message': 'missing "left"',
-                    'data': ''
-                }), 400
-            if 'right' not in request.form:
-                return res_cors({
-                    'status': 400,
-                    'message': 'missing "right"',
-                    'data': ''
-                }), 400
-
-            front = load_img(request.form['front'])
-            left = load_img(request.form['left'])
-            right = load_img(request.form['right'])
-            code, result = face_api.update_user(username, front, left, right)
+            code, result = face_api.remove_user(collection, username)
 
             if code == 200:
-                code, result = photo_api.update_user(
-                    username,
-                    left=request.form['left'],
-                    right=request.form['right'],
-                    front=request.form['front']
-                )
+                code, result = photo_api.remove_user(collection, username)
 
-            return res_cors({
-                'status': code,
-                'message': result,
-                'data': ''
-            }), code
-        except Exception as ex:
-            print(f'\n***FACE Update_users error: {ex}***\n')
-            return res_cors({
-                'status': 500,
-                'message': str(ex),
-                'data': ''
-            }), 500
-
-    @face_bp.route('/<username>', methods=['DELETE'])
-    def remove(username):
-        try:
-            v = verify(request.args, admin=True)
-            if v:
-                return v
-
-            code, result = face_api.remove_user(username)
-
-            if code == 200:
-                code, result = photo_api.remove_user(username)
-
-            return res_cors({
+            return jsonify({
                 'status': code,
                 'message': result,
                 'data': ''
             }), code
         except Exception as ex:
             print(f'\n***FACE Remove_users error: {ex}***\n')
-            return res_cors({
+            return jsonify({
                 'status': 500,
                 'message': str(ex),
                 'data': ''
@@ -237,24 +258,32 @@ def create_face_bp(app, model):
                 return v
 
             if not moodle_session(session_id):
-                return res_cors({
+                return jsonify({
                     'status': 400,
                     'message': 'Session ID not exist',
                     'data': ''
                 }), 400
 
             if 'images' not in request.form:
-                return res_cors({
+                return jsonify({
                     'status': 400,
                     'message': 'missing "images"',
                     'data': ''
                 }), 400
 
+            if 'collection' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "collection"',
+                    'data': ''
+                }), 400
+
             users = []
             for image in request.form.getlist('images'):
-                img = load_img(image)
-
-                code, username = face_api.verify(img)
+                code, username = face_api.verify(
+                    request.form['collection'],
+                    image
+                )
 
                 if code != 200:
                     users.append({'status': 0})
@@ -267,20 +296,23 @@ def create_face_bp(app, model):
                     else:
                         user['status'] = 2
 
-                    code, result = photo_api.get_user(username)
+                    code, result = photo_api.get_user(
+                        request.form['collection'],
+                        username
+                    )
                     if code == 200:
                         user['avatar'] = result['front']
 
                     users.append(user)
 
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': users
             }), 200
         except Exception as ex:
             print(f'\n***FACE Check_user error: {ex}***\n')
-            return res_cors({
+            return jsonify({
                 'status': 500,
                 'message': str(ex),
                 'data': ''
@@ -289,17 +321,18 @@ def create_face_bp(app, model):
     @face_bp.route('/verify', methods=['POST'])
     def face_verify():
         try:
-            img = request.form['image']
-            img = load_img(img)
-            code, result = face_api.verify(img)
-            return res_cors({
+            code, result = face_api.verify(
+                request.form['collection'],
+                request.form['image']
+            )
+            return jsonify({
                 'status': code,
                 'message': 'success',
                 'data': result
             }), code
         except Exception as ex:
             print(f'\n***FACE Check_user error: {ex}***\n')
-            return res_cors({
+            return jsonify({
                 'status': 500,
                 'message': str(ex),
                 'data': ''

@@ -1,4 +1,4 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, jsonify
 from moodle_service import *
 
 
@@ -9,13 +9,13 @@ api_bp = Blueprint('api_bp', __name__)
 def login():
     try:
         if 'username' not in request.json:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "username"',
                 'data': ''
             }), 400
         if 'password' not in request.json:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "password"',
                 'data': ''
@@ -26,20 +26,20 @@ def login():
             user = moodle_user(request.json['username'])
             user['token'] = result['token']
 
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': user
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 401,
             'message': 'wrong username or password',
             'data': ''
         }), 401
     except Exception as ex:
         print(f'\n***API Login error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -55,20 +55,20 @@ def get_log_by_course(course_id):
 
         logs = moodle_log_by_course(course_id)
         if logs:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': logs
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'course not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_log_by_course error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -79,13 +79,13 @@ def get_log_by_course(course_id):
 def room_schedule():
     try:
         if 'roomid' not in request.args:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "roomid"',
                 'data': ''
             }), 400
         if 'date' not in request.args:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "date"',
                 'data': ''
@@ -97,20 +97,20 @@ def room_schedule():
 
         schedule = moodle_room_schedule(request.args['roomid'], request.args['date'])
         if schedule:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': schedule
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'schedule not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_schedule error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -125,7 +125,7 @@ def get_rooms():
             return v
 
         if 'campus' not in request.args:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "campus"',
                 'data': ''
@@ -133,20 +133,20 @@ def get_rooms():
 
         log = moodle_room_by_campus(request.args['campus'])
         if log:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': log
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'campus not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_rooms error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -160,24 +160,24 @@ def get_log():
         if v:
             return v
 
-        user = moodle_token(request.args['token'])
+        user = moodle_token(request.args)
 
-        logs = moodle_get_course(request.args['token'], user['userid'])
+        logs = moodle_get_course(request.args, user['userid'])
         if logs:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': logs
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'attendance not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -193,20 +193,20 @@ def get_session(session_id):
 
         session = moodle_session(session_id)
         if session:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': session
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'session not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -221,23 +221,28 @@ def manual_check(session_id):
             return v
 
         if 'students' not in request.json:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "students"',
                 'data': ''
             }), 400
 
         for student in request.json['students']:
-            moodle_checkin(session_id, student['id'], student['status'])
+            if not moodle_checkin(session_id, student['id'], student['status']):
+                return jsonify({
+                    'status': 400,
+                    'message': 'failed to checkin',
+                    'data': ''
+                }), 400
 
-        return res_cors({
+        return jsonify({
             'status': 200,
             'message': 'success',
             'data': ''
         }), 200
     except Exception as ex:
         print(f'\n***API Manual_check error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -253,20 +258,20 @@ def get_student(username):
 
         student = moodle_user(username)
         if student:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': student
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'username not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_student error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''
@@ -281,13 +286,13 @@ def get_student_log():
             return v
 
         if 'studentid' not in request.args:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "studentid"',
                 'data': ''
             }), 400
         if 'sessionid' not in request.args:
-            return res_cors({
+            return jsonify({
                 'status': 400,
                 'message': 'missing "sessionid"',
                 'data': ''
@@ -295,20 +300,20 @@ def get_student_log():
 
         log = moodle_student_log(request.args['studentid'], request.args['sessionid'])
         if log:
-            return res_cors({
+            return jsonify({
                 'status': 200,
                 'message': 'success',
                 'data': log
             }), 200
 
-        return res_cors({
+        return jsonify({
             'status': 404,
             'message': 'student\'s log not found',
             'data': ''
         }), 404
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
-        return res_cors({
+        return jsonify({
             'status': 500,
             'message': str(ex),
             'data': ''

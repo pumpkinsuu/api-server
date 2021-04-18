@@ -68,13 +68,6 @@ def moodle_login(username, password):
 
 
 def verify(args, admin=False):
-    if 'token' not in args:
-        return res_cors({
-            'status': 400,
-            'message': 'missing token',
-            'data': ''
-        }), 400
-
     if args['token'] == API_KEY:
         return ''
 

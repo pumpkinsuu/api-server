@@ -1,24 +1,34 @@
-from utilities import res_cors
-from flask import Flask
+from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_ngrok import run_with_ngrok
 import argparse
 import os
 
+from face_service.api import FaceAPI
+from photo_service.api import PhotoAPI
 from face.face import create_face_bp
 from api.api import api_bp
 
-
 app = Flask(__name__, static_url_path='/data', static_folder='data')
+CORS(app)
 
 
 @app.errorhandler(404)
 def page_not_found(e):
-    print(e)
-    return res_cors({
-        'code': 404,
-        'message': 'Page not found',
+    return jsonify({
+        'status': 404,
+        'message': 'requested URL not found',
         'data': ''
     }), 404
+
+
+@app.errorhandler(405)
+def method_not_allow(e):
+    return jsonify({
+        'status': 405,
+        'message': 'wrong URL or method',
+        'data': ''
+    }), 405
 
 
 def main(argv):
@@ -30,7 +40,13 @@ def main(argv):
     if not os.path.isdir('data'):
         os.mkdir('data')
 
-    face_bp = create_face_bp(app, argv.model)
+    face_api = FaceAPI(app, argv.model)
+    photo_api = PhotoAPI(app)
+
+    face_bp = create_face_bp(face_api, photo_api)
+    CORS(face_bp)
+    CORS(api_bp)
+
     app.register_blueprint(face_bp, url_prefix='/face')
     app.register_blueprint(api_bp, url_prefix='/api')
     app.run()

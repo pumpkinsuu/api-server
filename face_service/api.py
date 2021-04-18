@@ -1,6 +1,8 @@
 from face_service.database import DataBase
 import numpy as np
 
+from utilities import load_img
+
 
 def mean(arr):
     return np.mean(arr, 0)
@@ -17,32 +19,43 @@ def find_min(x, arr):
 
 
 class FaceAPI:
-    def __init__(self, app, model=1):
+    def __init__(self,
+                 app,
+                 model=1):
         if model == 1:
-            from face_service.facenet_model import Model
+            from face_service.model.facenet import Model
             self.model = Model()
         else:
-            from face_service.model import Model
+            from face_service.model.dlib import Model
             self.model = Model()
 
         self.db = DataBase(app)
 
-    def create_user(self, ID, front, left, right):
+    def create_user(self,
+                    collection,
+                    user_id,
+                    front,
+                    left,
+                    right):
         try:
-            db_ids, db_embeds = self.db.get_users()
+            db_ids, db_embeds = self.db.get_users(collection)
 
-            if self.db.get_user(ID):
+            if self.db.get_user(collection, user_id):
                 return 409, 'username already exists'
 
-            front_embed = self.model.get_embed(front)
-            left_embed = self.model.get_embed(left)
-            right_embed = self.model.get_embed(right)
+            front_embed = self.model.get_embed(
+                load_img(front)
+            )
+            left_embed = self.model.get_embed(
+                load_img(left)
+            )
+            right_embed = self.model.get_embed(
+                load_img(right)
+            )
 
-            fl = distance(front_embed, left_embed)
-            fr = distance(front_embed, right_embed)
-
-            if fl > self.model.tol or fr > self.model.tol:
-                return 400, f'different faces: {fl}, {fr}'
+            if distance(front_embed, left_embed) > self.model.tol or distance(front_embed,
+                                                                              right_embed) > self.model.tol:
+                return 400, f'different faces'
 
             embed = mean([front_embed, left_embed, right_embed])
 
@@ -53,8 +66,8 @@ class FaceAPI:
                 if dist < self.model.tol:
                     return 409, 'face already exists'
 
-            if self.db.create({
-                'id': ID,
+            if self.db.create(collection, {
+                'id': user_id,
                 'embed': embed.tolist()
             }):
                 return 201, 'success'
@@ -64,18 +77,30 @@ class FaceAPI:
             print(f'\n***FaceAPI Create_user error: {ex}***\n')
             return 500, str(ex)
 
-    def update_user(self, ID, front, left, right):
+    def update_user(self,
+                    collection,
+                    user_id,
+                    front,
+                    left,
+                    right):
         try:
-            db_ids, db_embeds = self.db.get_users()
+            db_ids, db_embeds = self.db.get_users(collection)
 
-            if not self.db.get_user(ID):
+            if not self.db.get_user(collection, user_id):
                 return 404, 'username not registered'
 
-            front_embed = self.model.get_embed(front)
-            left_embed = self.model.get_embed(left)
-            right_embed = self.model.get_embed(right)
+            front_embed = self.model.get_embed(
+                load_img(front)
+            )
+            left_embed = self.model.get_embed(
+                load_img(left)
+            )
+            right_embed = self.model.get_embed(
+                load_img(right)
+            )
 
-            if distance(front_embed, left_embed) > self.model.tol or distance(front_embed, right_embed) > self.model.tol:
+            if distance(front_embed, left_embed) > self.model.tol or distance(front_embed,
+                                                                              right_embed) > self.model.tol:
                 return 400, 'different faces'
 
             embed = mean([front_embed, left_embed, right_embed])
@@ -83,13 +108,14 @@ class FaceAPI:
             if len(db_embeds):
                 db_embeds = np.array(db_embeds)
                 idx, dist = find_min(embed, db_embeds)
-                if dist < self.model.tol and db_ids[idx] != ID:
+                if dist < self.model.tol and db_ids[idx] != user_id:
                     return 409, 'face already exists'
 
-            if self.db.update({
-                'id': ID,
-                'embed': embed.tolist()
-            }):
+            if self.db.update(
+                    collection,
+                    user_id,
+                    {'embed': embed.tolist()}
+            ):
                 return 200, 'success'
 
             return 500, 'failed to update'
@@ -97,26 +123,28 @@ class FaceAPI:
             print(f'\n***FaceAPI Update_user error: {ex}***\n')
             return 500, str(ex)
 
-    def remove_user(self, ID):
+    def remove_user(self,
+                    collection,
+                    user_id):
+        if not self.db.get_user(collection, user_id):
+            return 404, 'username not registered'
+
+        if self.db.remove(collection, user_id):
+            return 200, 'successful'
+
+        return 500, 'failed to remove'
+
+    def verify(self,
+               collection,
+               image):
         try:
-            if not self.db.get_user(ID):
-                return 404, 'username not registered'
-
-            if self.db.remove(ID):
-                return 200, 'successful'
-
-            return 500, 'failed to remove'
-        except Exception as ex:
-            print(f'\n***FaceAPI Remove_user error: {ex}***\n')
-            return 500, str(ex)
-
-    def verify(self, image):
-        try:
-            db_ids, db_embeds = self.db.get_users()
+            db_ids, db_embeds = self.db.get_users(collection)
             if not db_ids:
                 return 500, 'database empty'
 
-            embed = self.model.get_embed(image)
+            embed = self.model.get_embed(
+                load_img(image)
+            )
             idx, dist = find_min(embed, db_embeds)
             if dist <= self.model.tol:
                 return 200, db_ids[idx]
@@ -126,24 +154,53 @@ class FaceAPI:
             print(f'\n***FaceAPI verify_user error: {ex}***\n')
             return 500, str(ex)
 
-    def get_user(self, ID):
-        try:
-            user = self.db.get_user(ID)
-            if user:
-                return 200, 'exist'
+    def get_user(self,
+                 collection,
+                 user_id):
+        user = self.db.get_user(collection, user_id)
+        if user:
+            return 200, 'exist'
 
+        return 404, 'username not found'
+
+    def rename_user(self,
+                    collection,
+                    user_id,
+                    new_id):
+        if self.db.get_user(collection, user_id):
             return 404, 'username not found'
-        except Exception as ex:
-            print(f'\n***FaceAPI Get_user error: {ex}***\n')
-            return 500, str(ex)
 
-    def get_users(self):
-        try:
-            ids, _ = self.db.get_users()
-            if len(ids) != 0:
-                return 200, ids
+        if self.db.update(
+                collection,
+                user_id,
+                {'id': new_id}
+        ):
+            return 200, 'success'
 
-            return 500, 'database empty'
-        except Exception as ex:
-            print(f'\n***FaceAPI Get_users error: {ex}***\n')
-            return 500, str(ex)
+        return 500, 'failed to update'
+
+    def get_users(self, collection):
+        ids, _ = self.db.get_users(collection)
+        if len(ids) != 0:
+            return 200, ids
+
+        return 500, 'database empty'
+
+    def count_collection(self, collection):
+        sz = self.db.count(collection)
+        if sz == -1:
+            return 500, 'database error'
+
+        return 200, sz
+
+    def rename_collection(self,
+                          collection,
+                          name):
+        if self.db.count(collection) == 0:
+            return 500, 'collection empty'
+
+        self.db.rename(collection, name)
+        return 200, 'success'
+
+    def drop_collection(self, collection):
+        return 200, self.db.drop(collection)
