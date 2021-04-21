@@ -46,6 +46,48 @@ def login():
         }), 500
 
 
+@api_bp.route('/get-student-reports ', methods=['GET'])
+def get_student_log():
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        if 'studentid' not in request.args:
+            return jsonify({
+                'status': 400,
+                'message': 'missing "studentid"',
+                'data': ''
+            }), 400
+        if 'courseid' not in request.args:
+            return jsonify({
+                'status': 400,
+                'message': 'missing "courseid"',
+                'data': ''
+            }), 400
+
+        log = moodle_student_log(request.args['studentid'], request.args['courseid'])
+        if log:
+            return jsonify({
+                'status': 200,
+                'message': 'success',
+                'data': log
+            }), 200
+
+        return jsonify({
+            'status': 404,
+            'message': 'student\'s log not found',
+            'data': ''
+        }), 404
+    except Exception as ex:
+        print(f'\n***API Get_session error: {ex}***\n')
+        return jsonify({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
+
 @api_bp.route('/get-reports/<course_id>', methods=['GET'])
 def get_log_by_course(course_id):
     try:
@@ -271,48 +313,6 @@ def get_student(username):
         }), 404
     except Exception as ex:
         print(f'\n***API Get_student error: {ex}***\n')
-        return jsonify({
-            'status': 500,
-            'message': str(ex),
-            'data': ''
-        }), 500
-
-
-@api_bp.route('/log', methods=['GET'])
-def get_student_log():
-    try:
-        v = verify(request.args)
-        if v:
-            return v
-
-        if 'studentid' not in request.args:
-            return jsonify({
-                'status': 400,
-                'message': 'missing "studentid"',
-                'data': ''
-            }), 400
-        if 'sessionid' not in request.args:
-            return jsonify({
-                'status': 400,
-                'message': 'missing "sessionid"',
-                'data': ''
-            }), 400
-
-        log = moodle_student_log(request.args['studentid'], request.args['sessionid'])
-        if log:
-            return jsonify({
-                'status': 200,
-                'message': 'success',
-                'data': log
-            }), 200
-
-        return jsonify({
-            'status': 404,
-            'message': 'student\'s log not found',
-            'data': ''
-        }), 404
-    except Exception as ex:
-        print(f'\n***API Get_session error: {ex}***\n')
         return jsonify({
             'status': 500,
             'message': str(ex),

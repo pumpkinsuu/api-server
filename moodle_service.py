@@ -1,4 +1,5 @@
 import requests as req
+from flask import jsonify
 from utilities import *
 
 
@@ -7,7 +8,7 @@ WSTOKEN = '56e75b2279ae442cc8a38aa3eb59f3a8'
 USER_INFO = 'local_webservices_get_roles'
 TOKEN_INFO = 'core_webservice_get_site_info'
 GET_LOG = 'local_webservices_get_logs_by_id'
-GET_STUDENT_LOG = 'local_webservices_get_a_log_by_ids'
+GET_STUDENT_LOG = 'local_webservices_get_student_logs_by_course_id'
 GET_LOG_BY_COURSE = 'local_webservices_get_logs_by_course_id'
 UPDATE_LOG = 'local_webservices_update_log'
 ROOM_SCHEDULE = 'local_webservices_get_schedules'
@@ -77,7 +78,7 @@ def verify(args, admin=False):
 
     result = moodle_token(args['token'])
     if not result:
-        return res_cors({
+        return jsonify({
             'status': 401,
             'message': 'unauthorized request',
             'data': ''
@@ -85,7 +86,7 @@ def verify(args, admin=False):
 
     user = moodle_user(result['username'])
     if not user or user['roleid'] not in role:
-        return res_cors({
+        return jsonify({
             'status': 401,
             'message': 'no permission',
             'data': ''
@@ -148,14 +149,14 @@ def moodle_log(attendance_id):
     return moodle_res(r)
 
 
-def moodle_student_log(student_id, session_id):
+def moodle_student_log(student_id, course_id):
     url = f'{HOST}/webservice/rest/server.php'
     params = {
         'moodlewsrestformat': 'json',
         'wstoken': WSTOKEN,
         'wsfunction': GET_STUDENT_LOG,
         'studentid': student_id,
-        'sessionid': session_id
+        'courseid': course_id
     }
     r = req.get(url, params=params)
     user = moodle_res(r)

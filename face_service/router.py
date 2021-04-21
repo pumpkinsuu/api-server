@@ -73,7 +73,7 @@ def create_api_bp(face_api: FaceAPI):
             result = []
             for image in request.form.getlist('images'):
                 code, username = face_api.verify(collection, image)
-                if code == 200:
+                if code != 500:
                     result.append(username)
 
             return jsonify({'result': result}), 200
