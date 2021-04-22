@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 
 from face_service.api import FaceAPI
 from photo_service.api import PhotoAPI

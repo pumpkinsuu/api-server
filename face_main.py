@@ -19,6 +19,9 @@ def main(argv):
     if not os.path.isdir('data'):
         os.mkdir('data')
 
+    if argv.debug == 1:
+        app.config["DEBUG"] = True
+
     face_api = FaceAPI(app, argv.model)
 
     api_bp = create_api_bp(face_api)
@@ -30,6 +33,7 @@ def main(argv):
 
 if __name__ == '__main__':
     parse = argparse.ArgumentParser()
+    parse.add_argument('--debug', type=int, default=0)
     parse.add_argument('--model', type=int, default=1
                        , help='1: facenet, 2: dlib')
     args = parse.parse_args()

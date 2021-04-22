@@ -75,7 +75,6 @@ class DataBase:
                user_id):
         try:
             self.db[collection].delete_one({'id': user_id})
-
             return True
         except Exception as ex:
             print(f'Delete: {ex}')
@@ -94,7 +93,6 @@ class DataBase:
                name):
         try:
             self.db[collection].rename(name)
-
             return True
         except Exception as ex:
             print(f'Rename: {ex}')
@@ -103,7 +101,8 @@ class DataBase:
     def drop(self,
              collection):
         try:
-            return self.db.drop_collection(collection)
+            self.db.drop_collection(collection)
+            return True
         except Exception as ex:
             print(f'Drop: {ex}')
             return False

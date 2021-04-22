@@ -108,7 +108,6 @@ def create_api_bp(face_api: FaceAPI):
     def drop_collection(collection):
         try:
             code, result = face_api.drop_collection(collection)
-
             return jsonify({'result': result}), code
         except Exception as ex:
             print(ex)
