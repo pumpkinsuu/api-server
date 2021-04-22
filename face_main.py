@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_ngrok import run_with_ngrok
 import argparse
 import os
 
@@ -19,6 +20,9 @@ def main(argv):
     if not os.path.isdir('data'):
         os.mkdir('data')
 
+    if argv.remote == 1:
+        run_with_ngrok(app)
+
     if argv.debug == 1:
         app.config["DEBUG"] = True
 
@@ -33,6 +37,7 @@ def main(argv):
 
 if __name__ == '__main__':
     parse = argparse.ArgumentParser()
+    parse.add_argument('--remote', type=int, default=0)
     parse.add_argument('--debug', type=int, default=0)
     parse.add_argument('--model', type=int, default=1
                        , help='1: facenet, 2: dlib')
