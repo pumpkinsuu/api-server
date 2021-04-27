@@ -250,19 +250,12 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                 'data': ''
             }), 500
 
-    @face_bp.route('/checkin/<session_id>', methods=['POST'])
-    def check(session_id):
+    @face_bp.route('/checkin/<room_id>', methods=['POST'])
+    def check(room_id):
         try:
             v = verify(request.args)
             if v:
                 return v
-
-            if not moodle_session(session_id):
-                return jsonify({
-                    'status': 400,
-                    'message': 'Session ID not exist',
-                    'data': ''
-                }), 400
 
             if 'images' not in request.form:
                 return jsonify({
@@ -291,7 +284,7 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
 
                 user = moodle_user(username)
                 if user:
-                    if moodle_checkin(session_id, username, 1):
+                    if moodle_checkin(room_id, username, 1):
                         user['status'] = 1
                     else:
                         user['status'] = 2

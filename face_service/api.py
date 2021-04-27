@@ -64,7 +64,7 @@ class FaceAPI:
 
                 idx, dist = find_min(embed, db_embeds)
                 if dist < self.model.tol:
-                    return 409, 'face already exists'
+                    return 409, f'face already exists {db_ids[idx]}'
 
             if self.db.create(collection, {
                 'id': user_id,
@@ -109,7 +109,7 @@ class FaceAPI:
                 db_embeds = np.array(db_embeds)
                 idx, dist = find_min(embed, db_embeds)
                 if dist < self.model.tol and db_ids[idx] != user_id:
-                    return 409, 'face already exists'
+                    return 409, f'face already exists {db_ids[idx]}'
 
             if self.db.update(
                     collection,
@@ -146,12 +146,27 @@ class FaceAPI:
                 load_img(image)
             )
             idx, dist = find_min(embed, db_embeds)
+
             if dist <= self.model.tol:
                 return 200, db_ids[idx]
 
             return 404, 'unknown'
         except Exception as ex:
             print(f'\n***FaceAPI verify_user error: {ex}***\n')
+            return 500, str(ex)
+
+    def distance(self, img1, img2):
+        try:
+            emb1 = self.model.get_embed(
+                load_img(img1)
+            )
+            emb2 = self.model.get_embed(
+                load_img(img2)
+            )
+            return 200, distance(emb1, emb2)
+
+        except Exception as ex:
+            print(f'\n***FaceAPI distance error: {ex}***\n')
             return 500, str(ex)
 
     def get_user(self,

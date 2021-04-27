@@ -95,18 +95,16 @@ def verify(args, admin=False):
     return ''
 
 
-def moodle_checkin(session_id, student_id, status, timein=0, timeout=0):
+def moodle_checkin(room_id, student_id, status):
     student_id = moodle_user(student_id)['id']
     url = f'{HOST}/webservice/rest/server.php'
     params = {
         'moodlewsrestformat': 'json',
         'wstoken': WSTOKEN,
         'wsfunction': UPDATE_LOG,
-        'sessionid': session_id,
+        'roomid': room_id,
         'studentid': student_id,
-        'statusid': status,
-        'timein': time_now(),
-        'timeout': timeout
+        'statusid': status
     }
     r = req.get(url, params=params)
     return bool(moodle_res(r))

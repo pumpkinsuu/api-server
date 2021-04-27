@@ -255,8 +255,8 @@ def get_session(session_id):
         }), 500
 
 
-@api_bp.route('/update-attendance-log/<session_id>', methods=['POST'])
-def manual_check(session_id):
+@api_bp.route('/update-attendance-log/<room_id>', methods=['POST'])
+def manual_check(room_id):
     try:
         v = verify(request.args)
         if v:
@@ -270,7 +270,7 @@ def manual_check(session_id):
             }), 400
 
         for student in request.json['students']:
-            if not moodle_checkin(session_id, student['id'], student['status']):
+            if not moodle_checkin(room_id, student['id'], student['status']):
                 return jsonify({
                     'status': 400,
                     'message': 'failed to checkin',

@@ -113,4 +113,18 @@ def create_api_bp(face_api: FaceAPI):
             print(ex)
             return jsonify({'error': str(ex)}), 500
 
+    @api_bp.route('/distance', methods=['POST'])
+    def distance():
+        try:
+            if 'img1' not in request.form:
+                return jsonify({'error': 'missing img1'}), 400
+            if 'img2' not in request.form:
+                return jsonify({'error': 'missing img2'}), 400
+
+            code, result = face_api.distance(request.form['img1'], request.form['img2'])
+            return jsonify({'result': str(result)}), code
+        except Exception as ex:
+            print(ex)
+            return jsonify({'error': str(ex)}), 500
+
     return api_bp
