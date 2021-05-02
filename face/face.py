@@ -373,7 +373,7 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                     'data': ''
                 }), 400
 
-            description = ''
+            description = 'Mistaken in face recognition'
             if 'description' in request.form:
                 description = request.form['description']
 
