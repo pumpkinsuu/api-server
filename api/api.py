@@ -318,3 +318,25 @@ def get_student(username):
             'message': str(ex),
             'data': ''
         }), 500
+
+
+@api_bp.route('/campus', methods=['GET'])
+def get_campus():
+    try:
+        v = verify(request.args)
+        if v:
+            return v
+
+        return jsonify({
+            'status': 200,
+            'message': 'success',
+            'data': ['NVC', 'LT']
+        }), 200
+    except Exception as ex:
+        print(f'\n***API Get_campus error: {ex}***\n')
+        return jsonify({
+            'status': 500,
+            'message': str(ex),
+            'data': ''
+        }), 500
+
