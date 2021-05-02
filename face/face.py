@@ -331,4 +331,105 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                 'data': ''
             }), 500
 
+    @face_bp.route('/feedback', methods=['POST'])
+    def face_feedback():
+        try:
+            v = verify(request.args)
+            if v:
+                return v
+
+            if 'image' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "image"',
+                    'data': ''
+                }), 400
+
+            if 'collection' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "collection"',
+                    'data': ''
+                }), 400
+
+            if 'roomid' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "roomid"',
+                    'data': ''
+                }), 400
+
+            if 'usertaken' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "usertaken"',
+                    'data': ''
+                }), 400
+
+            if 'userbetaken' not in request.form:
+                return jsonify({
+                    'status': 400,
+                    'message': 'missing "userbetaken"',
+                    'data': ''
+                }), 400
+
+            description = ''
+            if 'description' in request.form:
+                description = request.form['description']
+
+            code, result = face_api.get_user(
+                request.form['collection'],
+                request.form['usertaken'])
+
+            if code == 200:
+                code, result = photo_api.create_feedback(
+                    request.form['collection'],
+                    request.form['usertaken'],
+                    request.form['roomid'],
+                    request.form['image']
+                )
+                if code != 200:
+                    return jsonify({
+                        'status': 500,
+                        'message': result,
+                        'data': ''
+                    }), 500
+
+                url = f'{request.form["collection"]}' \
+                      f'/{request.form["roomid"]}' \
+                      f'/{request.form["usertaken"]}'
+
+                if moodle_create_feedback(
+                        request.form['roomid'],
+                        request.form['usertaken'],
+                        request.form['userbetaken'],
+                        description,
+                        url
+                ):
+                    return jsonify({
+                        'status': 200,
+                        'message': 'success',
+                        'data': ''
+                    }), 200
+                else:
+                    return jsonify({
+                        'status': 500,
+                        'message': 'moodle error',
+                        'data': ''
+                    }), 500
+
+            return jsonify({
+                'status': 404,
+                'message': 'usertaken not exist',
+                'data': ''
+            }), 404
+
+        except Exception as ex:
+            print(f'\n***FACE Create_feedback error: {ex}***\n')
+            return jsonify({
+                'status': 500,
+                'message': str(ex),
+                'data': ''
+            }), 500
+
     return face_bp

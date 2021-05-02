@@ -1,5 +1,5 @@
 from photo_service.database import DataBase
-
+from utilities import time_now
 
 class PhotoAPI:
     def __init__(self, app):
@@ -30,6 +30,24 @@ class PhotoAPI:
             'front': front
         }):
             return 201, 'success'
+
+        return 500, 'internal server error'
+
+    def create_feedback(self,
+                        collection,
+                        user_id,
+                        room_id,
+                        image):
+        if not self.db.get_user(collection, user_id):
+            return 404, 'username not registered'
+
+        if self.db.create(f'feedback_{collection}', {
+            'id': f'{time_now()}_{user_id}',
+            'userId': user_id,
+            'roomId': room_id,
+            'image': image
+        }):
+            return 200, 'success'
 
         return 500, 'internal server error'
 

@@ -1,7 +1,5 @@
 import requests as req
 from flask import jsonify
-from utilities import *
-
 
 HOST = 'http://localhost'
 WSTOKEN = '56e75b2279ae442cc8a38aa3eb59f3a8'
@@ -15,6 +13,7 @@ ROOM_SCHEDULE = 'local_webservices_get_schedules'
 ROOM_BY_CAMPUS = 'local_webservices_get_rooms'
 SESSION = 'local_webservices_get_session_detail'
 GET_COURSE = 'core_enrol_get_users_courses'
+CREATE_FEEDBACK = 'local_webservices_create_feedback'
 API_KEY = 'secret_key'
 DEF_ROLE = [1, 2, 3, 4]
 ADMIN_ROLE = [1]
@@ -194,6 +193,26 @@ def moodle_get_course(token, user_id):
         'wstoken': token,
         'wsfunction': GET_COURSE,
         'userid': user_id
+    }
+    r = req.get(url, params=params)
+    return moodle_res(r)
+
+
+def moodle_create_feedback(room_id,
+                           usertaken,
+                           userbetaken,
+                           description,
+                           image):
+    url = f'{HOST}/webservice/rest/server.php'
+    params = {
+        'moodlewsrestformat': 'json',
+        'wstoken': WSTOKEN,
+        'wsfunction': CREATE_FEEDBACK,
+        'roomid': room_id,
+        'usertaken': usertaken,
+        'userbetaken': userbetaken,
+        'description': description,
+        'image': image
     }
     r = req.get(url, params=params)
     return moodle_res(r)

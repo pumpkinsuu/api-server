@@ -13,7 +13,7 @@ def load_pb(path):
 
 class Model:
     def __init__(self):
-        self.tol = 0.76
+        self.tol = 0.7
         self.size = (160, 160)
         self.graph = load_pb('data/facenet.pb')
         self.sess = tf.compat.v1.Session(graph=self.graph)

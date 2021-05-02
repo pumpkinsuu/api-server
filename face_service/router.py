@@ -72,9 +72,12 @@ def create_api_bp(face_api: FaceAPI):
         try:
             result = []
             for image in request.form.getlist('images'):
-                code, username = face_api.verify(collection, image)
+                code, idx = face_api.verify(collection, image)
                 if code != 500:
-                    result.append(username)
+                    result.append({
+                        'id': idx,
+                        'status': code
+                    })
 
             return jsonify({'result': result}), 200
         except Exception as ex:

@@ -150,7 +150,7 @@ class FaceAPI:
             if dist <= self.model.tol:
                 return 200, db_ids[idx]
 
-            return 404, 'unknown'
+            return 404, ''
         except Exception as ex:
             print(f'\n***FaceAPI verify_user error: {ex}***\n')
             return 500, str(ex)
