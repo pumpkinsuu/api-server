@@ -330,7 +330,16 @@ def get_campus():
         return jsonify({
             'status': 200,
             'message': 'success',
-            'data': ['NVC', 'LT']
+            'data': [
+                {
+                    'id': 'NVC',
+                    'name': 'Nguyễn Văn Cừ'
+                },
+                {
+                    'id': 'LT',
+                    'name': 'Linh Trung'
+                }
+            ]
         }), 200
     except Exception as ex:
         print(f'\n***API Get_campus error: {ex}***\n')

@@ -147,7 +147,7 @@ class FaceAPI:
             )
             idx, dist = find_min(embed, db_embeds)
 
-            if dist <= self.model.tol:
+            if dist < self.model.tol:
                 return 200, db_ids[idx]
 
             return 404, ''

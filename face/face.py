@@ -382,18 +382,12 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                 request.form['usertaken'])
 
             if code == 200:
-                code, result = photo_api.create_feedback(
+                _, _ = photo_api.create_feedback(
                     request.form['collection'],
                     request.form['usertaken'],
                     request.form['roomid'],
                     request.form['image']
                 )
-                if code != 200:
-                    return jsonify({
-                        'status': 500,
-                        'message': result,
-                        'data': ''
-                    }), 500
 
                 url = f'{request.form["collection"]}' \
                       f'/{request.form["roomid"]}' \
@@ -414,7 +408,7 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                 else:
                     return jsonify({
                         'status': 500,
-                        'message': 'moodle error',
+                        'message': 'webservices error',
                         'data': ''
                     }), 500
 
