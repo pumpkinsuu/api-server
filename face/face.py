@@ -257,14 +257,14 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
             if v:
                 return v
 
-            if 'images' not in request.form:
+            if 'images' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "images"',
                     'data': ''
                 }), 400
 
-            if 'collection' not in request.form:
+            if 'collection' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "collection"',
@@ -272,9 +272,9 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                 }), 400
 
             users = []
-            for image in request.form.getlist('images'):
+            for image in request.json.getlist('images'):
                 code, username = face_api.verify(
-                    request.form['collection'],
+                    request.json['collection'],
                     image
                 )
 
@@ -290,7 +290,7 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                         user['status'] = 2
 
                     code, result = photo_api.get_user(
-                        request.form['collection'],
+                        request.json['collection'],
                         username
                     )
                     if code == 200:
