@@ -262,14 +262,14 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                     'status': 400,
                     'message': 'missing "images"',
                     'data': ''
-                }), 400
+                }), 200
 
             if 'collection' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "collection"',
                     'data': ''
-                }), 400
+                }), 200
 
             users = []
             for image in request.json.getlist('images'):
@@ -343,35 +343,35 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                     'status': 400,
                     'message': 'missing "image"',
                     'data': ''
-                }), 400
+                }), 200
 
             if 'collection' not in request.form:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "collection"',
                     'data': ''
-                }), 400
+                }), 200
 
             if 'roomid' not in request.form:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "roomid"',
                     'data': ''
-                }), 400
+                }), 200
 
             if 'usertaken' not in request.form:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "usertaken"',
                     'data': ''
-                }), 400
+                }), 200
 
             if 'userbetaken' not in request.form:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "userbetaken"',
                     'data': ''
-                }), 400
+                }), 200
 
             description = 'Mistaken in face recognition'
             if 'description' in request.form:
@@ -410,13 +410,13 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                         'status': 500,
                         'message': 'webservices error',
                         'data': ''
-                    }), 500
+                    }), 200
 
             return jsonify({
                 'status': 404,
                 'message': 'usertaken not exist',
                 'data': ''
-            }), 404
+            }), 200
 
         except Exception as ex:
             print(f'\n***FACE Create_feedback error: {ex}***\n')

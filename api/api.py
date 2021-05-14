@@ -13,13 +13,13 @@ def login():
                 'status': 400,
                 'message': 'missing "username"',
                 'data': ''
-            }), 400
+            }), 200
         if 'password' not in request.json:
             return jsonify({
                 'status': 400,
                 'message': 'missing "password"',
                 'data': ''
-            }), 400
+            }), 200
 
         result = moodle_login(request.json['username'], request.json['password'])
         if result:
@@ -36,7 +36,7 @@ def login():
             'status': 401,
             'message': 'wrong username or password',
             'data': ''
-        }), 401
+        }), 200
     except Exception as ex:
         print(f'\n***API Login error: {ex}***\n')
         return jsonify({
@@ -58,13 +58,13 @@ def get_student_log():
                 'status': 400,
                 'message': 'missing "studentid"',
                 'data': ''
-            }), 400
+            }), 200
         if 'courseid' not in request.args:
             return jsonify({
                 'status': 400,
                 'message': 'missing "courseid"',
                 'data': ''
-            }), 400
+            }), 200
 
         log = moodle_student_log(request.args['studentid'], request.args['courseid'])
         if log:
@@ -78,7 +78,7 @@ def get_student_log():
             'status': 404,
             'message': 'student\'s log not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
         return jsonify({
@@ -107,7 +107,7 @@ def get_log_by_course(course_id):
             'status': 404,
             'message': 'course not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_log_by_course error: {ex}***\n')
         return jsonify({
@@ -125,13 +125,13 @@ def room_schedule():
                 'status': 400,
                 'message': 'missing "roomid"',
                 'data': ''
-            }), 400
+            }), 200
         if 'date' not in request.args:
             return jsonify({
                 'status': 400,
                 'message': 'missing "date"',
                 'data': ''
-            }), 400
+            }), 200
 
         v = verify(request.args)
         if v:
@@ -149,7 +149,7 @@ def room_schedule():
             'status': 404,
             'message': 'schedule not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_schedule error: {ex}***\n')
         return jsonify({
@@ -171,7 +171,7 @@ def get_rooms():
                 'status': 400,
                 'message': 'missing "campus"',
                 'data': ''
-            }), 400
+            }), 200
 
         log = moodle_room_by_campus(request.args['campus'])
         if log:
@@ -185,7 +185,7 @@ def get_rooms():
             'status': 404,
             'message': 'campus not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_rooms error: {ex}***\n')
         return jsonify({
@@ -216,7 +216,7 @@ def get_log():
             'status': 404,
             'message': 'attendance not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
         return jsonify({
@@ -245,7 +245,7 @@ def get_session(session_id):
             'status': 404,
             'message': 'session not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_session error: {ex}***\n')
         return jsonify({
@@ -267,7 +267,7 @@ def manual_check(room_id):
                 'status': 400,
                 'message': 'missing "students"',
                 'data': ''
-            }), 400
+            }), 200
 
         for student in request.json['students']:
             if not moodle_checkin(room_id, student['id'], student['status']):
@@ -275,7 +275,7 @@ def manual_check(room_id):
                     'status': 400,
                     'message': 'failed to checkin',
                     'data': ''
-                }), 400
+                }), 200
 
         return jsonify({
             'status': 200,
@@ -310,7 +310,7 @@ def get_student(username):
             'status': 404,
             'message': 'username not found',
             'data': ''
-        }), 404
+        }), 200
     except Exception as ex:
         print(f'\n***API Get_student error: {ex}***\n')
         return jsonify({

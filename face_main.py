@@ -7,7 +7,9 @@ import os
 from face_service.api import FaceAPI
 from face_service.router import create_api_bp
 
-app = Flask(__name__, static_url_path='/data', static_folder='data')
+PORT = 5001
+
+app = Flask(__name__)
 CORS(app)
 
 
@@ -32,7 +34,7 @@ def main(argv):
     CORS(api_bp)
 
     app.register_blueprint(api_bp)
-    app.run()
+    app.run(port=PORT)
 
 
 if __name__ == '__main__':
