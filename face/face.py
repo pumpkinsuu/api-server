@@ -338,35 +338,35 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
             if v:
                 return v
 
-            if 'image' not in request.form:
+            if 'image' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "image"',
                     'data': ''
                 }), 200
 
-            if 'collection' not in request.form:
+            if 'collection' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "collection"',
                     'data': ''
                 }), 200
 
-            if 'roomid' not in request.form:
+            if 'roomid' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "roomid"',
                     'data': ''
                 }), 200
 
-            if 'usertaken' not in request.form:
+            if 'usertaken' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "usertaken"',
                     'data': ''
                 }), 200
 
-            if 'userbetaken' not in request.form:
+            if 'userbetaken' not in request.json:
                 return jsonify({
                     'status': 400,
                     'message': 'missing "userbetaken"',
@@ -374,29 +374,29 @@ def create_face_bp(face_api: FaceAPI, photo_api: PhotoAPI):
                 }), 200
 
             description = 'Mistaken in face recognition'
-            if 'description' in request.form:
-                description = request.form['description']
+            if 'description' in request.json:
+                description = request.json['description']
 
             code, result = face_api.get_user(
-                request.form['collection'],
-                request.form['usertaken'])
+                request.json['collection'],
+                request.json['usertaken'])
 
             if code == 200:
                 _, _ = photo_api.create_feedback(
-                    request.form['collection'],
-                    request.form['usertaken'],
-                    request.form['roomid'],
-                    request.form['image']
+                    request.json['collection'],
+                    request.json['usertaken'],
+                    request.json['roomid'],
+                    request.json['image']
                 )
 
-                url = f'{request.form["collection"]}' \
-                      f'/{request.form["roomid"]}' \
-                      f'/{request.form["usertaken"]}'
+                url = f'{request.json["collection"]}' \
+                      f'/{request.json["roomid"]}' \
+                      f'/{request.json["usertaken"]}'
 
                 if moodle_create_feedback(
-                        request.form['roomid'],
-                        request.form['usertaken'],
-                        request.form['userbetaken'],
+                        request.json['roomid'],
+                        request.json['usertaken'],
+                        request.json['userbetaken'],
                         description,
                         url
                 ):

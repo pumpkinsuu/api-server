@@ -1,6 +1,8 @@
 face_recognition
 flask
+flask_cors
 flask_ngrok
+flask_pymongo
 pymongo
 pymongo[srv]
 tensorflow
